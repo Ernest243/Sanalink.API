@@ -1,0 +1,6 @@
+@Sanalink.API_HostAddress = http://localhost:5189
+
+GET {{Sanalink.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

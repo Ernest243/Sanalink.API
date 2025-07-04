@@ -1,0 +1,54 @@
+## Build output
+bin/
+obj/
+out/
+build/
+
+## User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## IDE settings
+.vscode/
+.idea/
+*.code-workspace
+
+## Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+*.DS_Store
+Thumbs.db
+
+## Package management
+packages/
+node_modules/
+
+## EF Core / SQLite
+*.db-shm
+*.db-wal
+*.sqlite
+*.db
+
+## Publish output
+wwwroot/dist/
+*.publish/
+
+## Test results
+TestResults/
+*.coverage
+*.coveragexml
+
+## OS artifacts
+ehthumbs.db
+desktop.ini
+
+## Optional: include only code/config
+!*.cs
+!*.csproj
+!*.json
+!*.md
+!*.xml
