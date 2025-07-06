@@ -4,12 +4,9 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
-COPY *.csproj ./
-WORKDIR /src/Sanalink.API
-RUN dotnet restore
-
-COPY . .
-RUN dotnet publish -c Release -o /app/publish
+COPY . .  
+RUN dotnet restore ./Sanalink.API.csproj
+RUN dotnet publish ./Sanalink.API.csproj -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
