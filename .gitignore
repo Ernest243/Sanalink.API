@@ -31,7 +31,6 @@ node_modules/
 *.db-shm
 *.db-wal
 *.sqlite
-*.db
 
 ## Publish output
 wwwroot/dist/
