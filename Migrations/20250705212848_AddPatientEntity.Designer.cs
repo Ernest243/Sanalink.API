@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sanalink.API.Data;
 
@@ -10,9 +11,11 @@ using Sanalink.API.Data;
 namespace Sanalink.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250705212848_AddPatientEntity")]
+    partial class AddPatientEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.6");
@@ -224,42 +227,6 @@ namespace Sanalink.API.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Sanalink.API.Models.Appointment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreateAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("DoctorId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("PatientId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DoctorId");
-
-                    b.HasIndex("PatientId");
-
-                    b.ToTable("Appointments");
-                });
-
             modelBuilder.Entity("Sanalink.API.Models.Patient", b =>
                 {
                     b.Property<int>("Id")
@@ -341,25 +308,6 @@ namespace Sanalink.API.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Sanalink.API.Models.Appointment", b =>
-                {
-                    b.HasOne("Sanalink.API.Models.ApplicationUser", "Doctor")
-                        .WithMany()
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Sanalink.API.Models.Patient", "Patient")
-                        .WithMany()
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Doctor");
-
-                    b.Navigation("Patient");
                 });
 #pragma warning restore 612, 618
         }
