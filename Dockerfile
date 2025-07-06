@@ -4,7 +4,7 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
-COPY Sanalink.API/*.csproj ./Sanalink.API/
+COPY *.csproj ./
 WORKDIR /src/Sanalink.API
 RUN dotnet restore
 
