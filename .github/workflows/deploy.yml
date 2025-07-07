@@ -1,17 +1,20 @@
-name: Manual Deploy to Render
+name: Manual Render Deploy
 
 on:
-  workflow_dispatch:  #Run manually via GitHub UI
+  workflow_dispatch:
+  push:
+    branches:
+      - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
 
+    steps:
       - name: Trigger Render Deploy
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          echo "Calling Render deploy hook..."
-          curl -X POST "{{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          echo "Triggering Render deployment..."
+          curl -X POST "$RENDER_DEPLOY_HOOK_URL"

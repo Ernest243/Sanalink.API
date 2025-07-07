@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sanalink.API.Data;
+using Sanalink.API.Dtos;
 using Sanalink.API.Models;
 using System.Security.Claims;
 
@@ -44,16 +45,23 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Doctor")]
-    public async Task<IActionResult> Create(Appointment appt)
+    [Authorize(Roles = "Doctor, Nurse, Admin")]
+    public async Task<IActionResult> BookAppointment([FromBody] AppointmentCreateDto dto)
     {
-        appt.CreateAt = DateTime.UtcNow;
-        appt.DoctorId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var appointment = new Appointment
+        {
+            PatientId = dto.PatientId,
+            DoctorId = dto.DoctorId,
+            Date = dto.Date,
+            Reason = dto.Reason,
+            Status = "Scheduled",
+            CreateAt = DateTime.UtcNow
+        };
 
-        _db.Appointments.Add(appt);
+        _db.Appointments.Add(appointment);
         await _db.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetById), new { id = appt.Id }, appt);
+        return Ok(appointment);
     }
 
     [HttpPut("{id}")]
