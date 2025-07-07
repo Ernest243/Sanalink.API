@@ -1,44 +1,46 @@
 name: Deploy to DEV with Status
 
 on:
-  workflow_dispatch:      # manual trigger
   push:
-    branches: [master]
+    branches:
+      - master
 
 jobs:
   deploy:
+    name: Deploy to Render DEV
     runs-on: ubuntu-latest
-    environment:
-      name: DEV
-      url: https://sanalink-api.onrender.com
+    environment: DEV
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Trigger Render Deploy Hook
-        env:
-          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          echo "Triggering deploy via Render Hook..."
-          curl -X POST "$RENDER_DEPLOY_HOOK"
+          echo "Triggering deployment via Render Deploy Hook..."
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
 
       - name: Poll Render Deployment Status
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          SERVICE_ID: srv-d1ll4cur433s73drskdg
         run: |
-          echo "Polling Render deploy status..."
-          for i in {1..30}; do
-            STATUS=$(curl -s -H "Authorization: Bearer $RENDER_API_KEY" \
-              https://api.render.com/v1/services/$SERVICE_ID/deploys \
-              | jq -r '.[0].status')
-            echo "Current deploy status: $STATUS"
-            if [[ "$STATUS" == "live" ]]; then
+          echo "Polling Render deployment status..."
+
+          for i in {1..30}
+          do
+            response=$(curl -s -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" https://api.render.com/v1/services/srv-d1ll4cur433s73drskdg/deploys)
+            echo "Response: $response"  # Optional: comment this out after confirming it works
+            status=$(echo "$response" | jq -r '.[0].status')
+            echo "Current deploy status: $status"
+
+            if [ "$status" = "live" ]; then
               echo "✅ Deployment is live!"
               exit 0
-            elif [[ "$STATUS" =~ _failed|canceled ]]; then
-              echo "❌ Deployment failed with status: $STATUS"
+            elif [ "$status" = "failed" ]; then
+              echo "❌ Deployment failed!"
               exit 1
             fi
             sleep 10
           done
-          echo "⌛ Deployment timed out."
+
+          echo "⚠️ Deployment did not complete in time."
           exit 1
+          
