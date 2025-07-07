@@ -25,7 +25,7 @@ jobs:
           echo "⏳ Waiting for service to become healthy at /health..."
           MAX_RETRIES=50
           SLEEP_SECONDS=30
-          URL="https://sanalink-api.onrender.com/health"
+          URL="https://sanalink-api.onrender.com/api/Health"
 
           for i in $(seq 1 $MAX_RETRIES); do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
