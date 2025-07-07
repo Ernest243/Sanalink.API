@@ -14,6 +14,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 
 builder.Services.AddScoped<IRoleSeeder, RoleSeeder>();
+builder.Services.AddScoped<INoteService, NoteService>();
+builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
 
 // Add DB context (SQLite)
 builder.Services.AddDbContext<AppDbContext>(options =>

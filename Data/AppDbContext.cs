@@ -10,5 +10,7 @@ namespace Sanalink.API.Data
 
         public DbSet<Patient> Patients { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
+        public DbSet<Note> Notes { get; set; }
+        public DbSet<Prescription> Prescriptions { get; set; }
     }
 }
