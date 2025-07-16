@@ -30,7 +30,13 @@ builder.Services.AddCors(options =>
 
 // Add DB context (SQLite)
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+#if DEBUG
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+#else
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection"));
+#endif
+});
 
 // Add Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
