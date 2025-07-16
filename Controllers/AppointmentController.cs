@@ -91,4 +91,32 @@ public class AppointmentController : ControllerBase
 
         return Ok(new { message = "Appointment cancelled" });
     }
+
+    [HttpGet("appointments-per-day")]
+    [Authorize(Roles = "Doctor,Admin, Nurse")]
+    public async Task<IActionResult> GetAppointmentsPerDay()
+    {
+        var now = DateTime.UtcNow;
+        var start = now.AddDays(-9).Date;
+
+        var data = await _db.Appointments
+            .Where(a => a.Date >= start)
+            .GroupBy(a => a.Date.Date)
+            .Select(g => new
+            {
+                Date = g.Key,
+                Count = g.Count()
+            })
+            .ToListAsync();
+
+        var result = Enumerable.Range(0, 10).Select(i => start.AddDays(i)).ToList();
+
+        var response = new
+        {
+            dates = result.Select(d => d.ToString("MM-dd")),
+            counts = result.Select(d => data.FirstOrDefault(x => x.Date == d)?.Count ?? 0)
+        };
+
+        return Ok(response);
+    }
 }

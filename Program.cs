@@ -17,6 +17,19 @@ builder.Services.AddScoped<IRoleSeeder, RoleSeeder>();
 builder.Services.AddScoped<INoteService, NoteService>();
 builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
 
+// Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            var frontendUrl = builder.Configuration["FrontendUrl"] ?? "http://localhost:5173";
+            policy.WithOrigins(frontendUrl)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 // Add DB context (SQLite)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -95,6 +108,7 @@ if (app.Environment.IsDevelopment())
 
 }
 
+app.UseCors("AllowFrontend");
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseAuthentication();
