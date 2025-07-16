@@ -28,15 +28,21 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add DB context (SQLite)
+// Add DB context
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
 #if DEBUG
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.UseSqlite(connectionString);
 #else
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection"));
+    options.UseNpgsql(connectionString);
 #endif
 });
+
+Console.WriteLine($"Current Environment: {builder.Environment.EnvironmentName}");
+Console.WriteLine($"Connection string: {connectionString}");
 
 // Add Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -105,6 +111,12 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
