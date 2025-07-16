@@ -20,14 +20,12 @@ builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
 // Add CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend",
-        policy =>
-        {
-            var frontendUrl = builder.Configuration["FrontendUrl"] ?? "http://localhost:5173";
-            policy.WithOrigins(frontendUrl)
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowVercel", policy =>
+    {
+        policy.WithOrigins("https://sanalink-ui.vercel.app", "http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
 });
 
 // Add DB context (SQLite)
@@ -108,7 +106,7 @@ if (app.Environment.IsDevelopment())
 
 }
 
-app.UseCors("AllowFrontend");
+app.UseCors("AllowVercel");
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseAuthentication();
