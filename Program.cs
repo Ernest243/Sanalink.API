@@ -8,16 +8,20 @@ using Sanalink.API.Models;
 using Sanalink.API.Services;
 using Microsoft.OpenApi.Models;
 
+// STEP 1: Load config correctly BEFORE using it
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables();
 
+// STEP 2: Add services
 builder.Services.AddScoped<IRoleSeeder, RoleSeeder>();
 builder.Services.AddScoped<INoteService, NoteService>();
 builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
 
-// Add CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVercel", policy =>
@@ -28,8 +32,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add DB context
-
+// STEP 3: Use correct connection string for dev/prod
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -44,20 +47,18 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 Console.WriteLine($"Current Environment: {builder.Environment.EnvironmentName}");
 Console.WriteLine($"Connection string: {connectionString}");
 
-// Add Identity
+// STEP 4: Add Identity and Auth
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = true;
     options.Password.RequiredLength = 6;
-    // Disabled just for DEMO
-    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireNonAlphanumeric = false; // for demo
     options.Password.RequireUppercase = false;
     options.Password.RequireLowercase = false;
 })
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -73,18 +74,20 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = false,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+            builder.Configuration["Jwt:Key"]!
+        ))
     };
 });
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Sanalink.API", Version = "v1" });
 
-    // JWT Auth config
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
@@ -105,40 +108,38 @@ builder.Services.AddSwaggerGen(c =>
                     Id = "Bearer"
                 }
             },
-            new string[] {}
+            Array.Empty<string>()
         }
     });
 });
 
+// STEP 5: Build app and middleware
 var app = builder.Build();
 
-builder.Configuration
-    .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
-    .AddEnvironmentVariables();
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseCors("AllowVercel");
-app.UseSwagger();
-app.UseSwaggerUI();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+// STEP 6: Apply migrations in production only
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+
+    if (env.IsProduction())
+    {
+        db.Database.Migrate(); // applies all migrations in prod
+    }
 
     var seeder = scope.ServiceProvider.GetRequiredService<IRoleSeeder>();
     await seeder.SeedRolesAsync();
 }
 
 app.Run();
-
