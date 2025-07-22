@@ -111,11 +111,8 @@ builder.Services.AddSwaggerGen(c =>
 // STEP 5: Build app and middleware
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseCors("AllowVercel");
 app.UseAuthentication();
