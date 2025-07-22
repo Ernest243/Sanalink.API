@@ -36,13 +36,8 @@ builder.Services.AddCors(options =>
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-{
-#if DEBUG
-    options.UseSqlite(connectionString);
-#else
-    options.UseNpgsql(connectionString);
-#endif
-});
+    options.UseNpgsql(connectionString));
+
 
 Console.WriteLine($"Current Environment: {builder.Environment.EnvironmentName}");
 Console.WriteLine($"Connection string: {connectionString}");
