@@ -18,6 +18,14 @@ namespace Sanalink.API.Controllers
             _service = service;
         }
 
+        [HttpGet]
+        [Authorize(Roles = "Doctor, Nurse, Admin")]
+        public async Task<IActionResult> GetAllPrescriptions()
+        {
+            var prescriptions = await _service.GetAllPrescriptionsAsync();
+            return Ok(prescriptions);
+        }
+
         [HttpGet("patient/{patientId}")]
         public async Task<IActionResult> GetPrescriptionsForPatient(int patientId)
         {
