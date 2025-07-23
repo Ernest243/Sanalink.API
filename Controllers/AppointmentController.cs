@@ -119,4 +119,29 @@ public class AppointmentController : ControllerBase
 
         return Ok(response);
     }
+
+    [HttpGet("analytics")]
+    [Authorize(Roles = "Doctor,Admin, Nurse")]
+    public async Task<IActionResult> GetAppointmentAnalytics()
+    {
+        var appointments = await _db.Appointments.ToListAsync();
+        var total = appointments.Count;
+        var scheduled = appointments.Count(a => a.Status == "Scheduled");
+        var completed = appointments.Count(a => a.Status == "Completed");
+        var cancelled = appointments.Count(a => a.Status == "Cancelled");
+
+        var totalPatients = await _db.Patients.CountAsync();
+        var totalPrescriptions = await _db.Prescriptions.CountAsync();
+
+        return Ok(new
+        {
+            totalAppointments = total,
+            scheduled,
+            completed,
+            cancelled,
+            totalPatients,
+            totalPrescriptions
+        });
+    }
+
 }

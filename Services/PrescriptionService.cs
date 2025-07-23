@@ -14,6 +14,25 @@ namespace Sanalink.API.Services
             _context = context;
         }
 
+        public async Task<IEnumerable<PrescriptionReadDto>> GetAllPrescriptionsAsync()
+        {
+            var prescriptions = await _context.Prescriptions
+                .Include(p => p.Patient)
+                .Include(p => p.Doctor)
+                .ToListAsync();
+
+            return prescriptions.Select(p => new PrescriptionReadDto
+            {
+                Id = p.Id,
+                PatientId = p.PatientId,
+                PatientName = p.Patient.FirstName + " " + p.Patient.LastName,
+                DoctorName = p.Doctor.UserName!,
+                MedicationName = p.MedicationName,
+                Dosage = p.Dosage,
+                CreatedAt = p.CreatedAt
+            });
+        }
+
         public async Task<IEnumerable<PrescriptionReadDto>> GetPrescriptionsForPatientAsync(int patientId)
         {
             return await _context.Prescriptions

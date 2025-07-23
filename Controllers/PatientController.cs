@@ -29,6 +29,37 @@ public class PatientController : ControllerBase
 
         return Ok(patients);
     }
+
+    [HttpGet("registrations/last7days")]
+    [Authorize(Roles = "Admin,Doctor,Nurse")]
+    public async Task<IActionResult> GetRegistrationsLast7Days()
+    {
+        var endDate = DateTime.UtcNow.Date;
+        var startDate = endDate.AddDays(-6);
+
+        var registrations = await _db.Patients
+            .Where(p => p.CreatedAt.Date >= startDate && p.CreatedAt.Date <= endDate)
+            .GroupBy(p => p.CreatedAt.Date)
+            .Select(g => new
+            {
+                Date = g.Key,
+                Count = g.Count()
+            })
+            .ToListAsync();
+
+        // Fill missing days with 0
+        var result = Enumerable.Range(0, 7)
+            .Select(i => startDate.AddDays(i))
+            .Select(date => new
+            {
+                Date = date.ToString("yyyy-MM-dd"),
+                Count = registrations.FirstOrDefault(r => r.Date == date)?.Count ?? 0
+            });
+
+        return Ok(result);
+    }
+
+
     // POST: /api/patient
     [HttpPost]
     [Authorize(Roles = "Doctor")]
@@ -70,5 +101,15 @@ public class PatientController : ControllerBase
         await _db.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    [HttpGet("recent")]
+    [Authorize(Roles = "Admin, Doctor, Nurse")]
+    public async Task<IActionResult> GetRecentRegistration()
+    {
+        var cutoff = DateTime.UtcNow.AddDays(-7);
+        var recentCount = await _db.Patients.CountAsync(p => p.CreatedAt >= cutoff);
+
+        return Ok(recentCount);
     }
 }

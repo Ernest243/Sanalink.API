@@ -5,6 +5,7 @@ using Sanalink.API.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Sanalink.API.Controllers;
 
@@ -77,6 +78,20 @@ public class AuthController : ControllerBase
         var token = GenerateJwtToken(user);
 
         return Ok(new { token });
+    }
+
+    [HttpGet("active-staff-count")]
+    [Authorize(Roles = "Admin, Doctor, Nurse")]
+    public async Task<IActionResult> GetActiveStaffCount()
+    {
+        var doctorCount = await _userManager.GetUsersInRoleAsync("Doctor");
+        var nurseCount = await _userManager.GetUsersInRoleAsync("Nurse");
+
+        return Ok(new
+        {
+            doctors = doctorCount.Count,
+            nurseCount = nurseCount.Count
+        });
     }
 
     private string GenerateJwtToken(ApplicationUser user)
