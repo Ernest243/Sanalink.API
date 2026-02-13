@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Sanalink.API.Data;
 using Sanalink.API.Models;
 using Sanalink.API.Services;
+using Sanalink.API.Middleware;
 using Microsoft.OpenApi.Models;
 
 // STEP 1: Load config correctly BEFORE using it
@@ -23,6 +24,7 @@ builder.Services.AddScoped<INoteService, NoteService>();
 builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
 builder.Services.AddScoped<IEncounterService, EncounterService>();
 builder.Services.AddScoped<IFacilityService, FacilityService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 builder.Services.AddCors(options =>
 {
@@ -118,6 +120,7 @@ app.UseSwaggerUI();
 
 app.UseCors("AllowVercel");
 app.UseAuthentication();
+app.UseMiddleware<AuditLoggingMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
 

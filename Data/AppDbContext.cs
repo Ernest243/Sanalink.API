@@ -15,10 +15,18 @@ namespace Sanalink.API.Data
         public DbSet<Prescription> Prescriptions { get; set; }
         public DbSet<Encounter> Encounters { get; set; }
         public DbSet<Facility> Facilities { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            // AuditLog -> ApplicationUser (optional FK)
+            builder.Entity<AuditLog>()
+                .HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // ApplicationUser -> Facility (optional FK)
             builder.Entity<ApplicationUser>()
