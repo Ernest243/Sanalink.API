@@ -22,6 +22,7 @@ builder.Services.AddScoped<IRoleSeeder, RoleSeeder>();
 builder.Services.AddScoped<INoteService, NoteService>();
 builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
 builder.Services.AddScoped<IEncounterService, EncounterService>();
+builder.Services.AddScoped<IFacilityService, FacilityService>();
 
 builder.Services.AddCors(options =>
 {

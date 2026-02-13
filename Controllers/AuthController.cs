@@ -40,6 +40,7 @@ public class AuthController : ControllerBase
             FullName = dto.FullName,
             Role = dto.Role,
             Department = dto.Department,
+            FacilityId = dto.FacilityId,
             EmailConfirmed = true,
             IsActive = true
         };
@@ -84,13 +85,24 @@ public class AuthController : ControllerBase
     [Authorize(Roles = "Admin, Doctor, Nurse")]
     public async Task<IActionResult> GetActiveStaffCount()
     {
-        var doctorCount = await _userManager.GetUsersInRoleAsync("Doctor");
-        var nurseCount = await _userManager.GetUsersInRoleAsync("Nurse");
+        var facilityIdClaim = User.FindFirstValue("facilityId");
+        int.TryParse(facilityIdClaim, out int facilityId);
+
+        var doctors = await _userManager.GetUsersInRoleAsync("Doctor");
+        var nurses = await _userManager.GetUsersInRoleAsync("Nurse");
+
+        var doctorCount = facilityId > 0
+            ? doctors.Count(d => d.FacilityId == facilityId)
+            : doctors.Count;
+
+        var nurseCount = facilityId > 0
+            ? nurses.Count(n => n.FacilityId == facilityId)
+            : nurses.Count;
 
         return Ok(new
         {
-            doctors = doctorCount.Count,
-            nurseCount = nurseCount.Count
+            doctors = doctorCount,
+            nurseCount = nurseCount
         });
     }
 
@@ -100,7 +112,8 @@ public class AuthController : ControllerBase
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
             new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
-            new Claim("role", user.Role ?? "")
+            new Claim("role", user.Role ?? ""),
+            new Claim("facilityId", user.FacilityId?.ToString() ?? "")
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
