@@ -16,6 +16,7 @@ namespace Sanalink.API.Data
         public DbSet<Encounter> Encounters { get; set; }
         public DbSet<Facility> Facilities { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<LabOrder> LabOrders { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -51,6 +52,25 @@ namespace Sanalink.API.Data
             builder.Entity<Encounter>()
                 .HasIndex(e => e.EncounterNumber)
                 .IsUnique();
+
+            // LabOrder FKs
+            builder.Entity<LabOrder>()
+                .HasOne(l => l.Encounter)
+                .WithMany()
+                .HasForeignKey(l => l.EncounterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<LabOrder>()
+                .HasOne(l => l.Patient)
+                .WithMany()
+                .HasForeignKey(l => l.PatientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<LabOrder>()
+                .HasOne(l => l.Doctor)
+                .WithMany()
+                .HasForeignKey(l => l.DoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // STEP: Apply UTC DateTime converter globally
             var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
