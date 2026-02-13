@@ -18,12 +18,25 @@ public class PatientController : ControllerBase
         _db = db;
     }
 
+    private int GetFacilityId()
+    {
+        var claim = User.FindFirstValue("facilityId");
+        int.TryParse(claim, out int facilityId);
+        return facilityId;
+    }
+
     // GET: /api/patient
     [HttpGet]
     [Authorize(Roles = "Doctor,Nurse,Admin")]
     public async Task<IActionResult> GetPatients()
     {
-        var patients = await _db.Patients
+        var facilityId = GetFacilityId();
+
+        var query = _db.Patients.AsQueryable();
+        if (facilityId > 0)
+            query = query.Where(p => p.FacilityId == facilityId);
+
+        var patients = await query
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
 
@@ -34,11 +47,17 @@ public class PatientController : ControllerBase
     [Authorize(Roles = "Admin,Doctor,Nurse")]
     public async Task<IActionResult> GetRegistrationsLast7Days()
     {
+        var facilityId = GetFacilityId();
         var endDate = DateTime.UtcNow.Date;
         var startDate = endDate.AddDays(-6);
 
-        var registrations = await _db.Patients
-            .Where(p => p.CreatedAt.Date >= startDate && p.CreatedAt.Date <= endDate)
+        var query = _db.Patients
+            .Where(p => p.CreatedAt.Date >= startDate && p.CreatedAt.Date <= endDate);
+
+        if (facilityId > 0)
+            query = query.Where(p => p.FacilityId == facilityId);
+
+        var registrations = await query
             .GroupBy(p => p.CreatedAt.Date)
             .Select(g => new
             {
@@ -65,6 +84,10 @@ public class PatientController : ControllerBase
     [Authorize(Roles = "Doctor")]
     public async Task<IActionResult> CreatePatient(Patient patient)
     {
+        var facilityId = GetFacilityId();
+        if (facilityId > 0)
+            patient.FacilityId = facilityId;
+
         patient.CreatedAt = DateTime.Now;
         patient.CreatedBy = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -79,8 +102,11 @@ public class PatientController : ControllerBase
     [Authorize(Roles = "Doctor, Nurse, Admin")]
     public async Task<IActionResult> GetPatientById(int id)
     {
+        var facilityId = GetFacilityId();
         var patient = await _db.Patients.FindAsync(id);
+
         if (patient == null) return NotFound();
+        if (facilityId > 0 && patient.FacilityId != facilityId) return NotFound();
 
         return Ok(patient);
     }
@@ -90,8 +116,11 @@ public class PatientController : ControllerBase
     [Authorize(Roles = "Doctor")]
     public async Task<IActionResult> UpdatePatient(int id, Patient updated)
     {
+        var facilityId = GetFacilityId();
         var existing = await _db.Patients.FindAsync(id);
+
         if (existing == null) return NotFound();
+        if (facilityId > 0 && existing.FacilityId != facilityId) return NotFound();
 
         existing.FirstName = updated.FirstName;
         existing.LastName = updated.LastName;
@@ -107,9 +136,35 @@ public class PatientController : ControllerBase
     [Authorize(Roles = "Admin, Doctor, Nurse")]
     public async Task<IActionResult> GetRecentRegistration()
     {
+        var facilityId = GetFacilityId();
         var cutoff = DateTime.UtcNow.AddDays(-7);
-        var recentCount = await _db.Patients.CountAsync(p => p.CreatedAt >= cutoff);
+
+        var query = _db.Patients.Where(p => p.CreatedAt >= cutoff);
+        if (facilityId > 0)
+            query = query.Where(p => p.FacilityId == facilityId);
+
+        var recentCount = await query.CountAsync();
 
         return Ok(recentCount);
+    }
+
+    [HttpGet("search")]
+    [Authorize(Roles = "Doctor, Nurse, Admin")]
+    public async Task<IActionResult> Search(string query)
+    {
+        var facilityId = GetFacilityId();
+
+        var patientsQuery = _db.Patients
+            .Where(p => p.FirstName.Contains(query) || p.LastName.Contains(query));
+
+        if (facilityId > 0)
+            patientsQuery = patientsQuery.Where(p => p.FacilityId == facilityId);
+
+        var results = await patientsQuery
+            .Select(p => new { p.FirstName, p.LastName })
+            .Take(10)
+            .ToListAsync();
+
+        return Ok(results);
     }
 }
