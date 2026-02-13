@@ -13,10 +13,28 @@ namespace Sanalink.API.Data
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Note> Notes { get; set; }
         public DbSet<Prescription> Prescriptions { get; set; }
+        public DbSet<Encounter> Encounters { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            // Encounter: two FKs to ApplicationUser (Doctor, Nurse)
+            builder.Entity<Encounter>()
+                .HasOne(e => e.Doctor)
+                .WithMany()
+                .HasForeignKey(e => e.DoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Encounter>()
+                .HasOne(e => e.Nurse)
+                .WithMany()
+                .HasForeignKey(e => e.NurseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Encounter>()
+                .HasIndex(e => e.EncounterNumber)
+                .IsUnique();
 
             // STEP: Apply UTC DateTime converter globally
             var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
