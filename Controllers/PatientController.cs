@@ -8,7 +8,7 @@ using System.Security.Claims;
 namespace Sanalink.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v1/[controller]")]
 public class PatientController : ControllerBase
 {
     private readonly AppDbContext _db;
