@@ -17,6 +17,7 @@ namespace Sanalink.API.Data
         public DbSet<Facility> Facilities { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<LabOrder> LabOrders { get; set; }
+        public DbSet<PharmacyDispense> PharmacyDispenses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -70,6 +71,25 @@ namespace Sanalink.API.Data
                 .HasOne(l => l.Doctor)
                 .WithMany()
                 .HasForeignKey(l => l.DoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // PharmacyDispense FKs
+            builder.Entity<PharmacyDispense>()
+                .HasOne(d => d.Prescription)
+                .WithMany()
+                .HasForeignKey(d => d.PrescriptionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<PharmacyDispense>()
+                .HasOne(d => d.Patient)
+                .WithMany()
+                .HasForeignKey(d => d.PatientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<PharmacyDispense>()
+                .HasOne(d => d.DispensedBy)
+                .WithMany()
+                .HasForeignKey(d => d.DispensedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // STEP: Apply UTC DateTime converter globally
