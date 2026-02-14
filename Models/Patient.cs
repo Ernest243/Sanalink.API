@@ -18,6 +18,9 @@ public class Patient
     [ForeignKey("FacilityId")]
     public Facility? Facility { get; set; }
 
+    public string? UserId { get; set; }
+    public ApplicationUser? User { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public string? CreatedBy { get; set; } // User ID
 }

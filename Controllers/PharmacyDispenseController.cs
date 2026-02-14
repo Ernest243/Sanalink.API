@@ -18,6 +18,18 @@ namespace Sanalink.API.Controllers
             _pharmacyDispenseService = pharmacyDispenseService;
         }
 
+        [HttpGet("my")]
+        [Authorize(Roles = "Patient")]
+        public async Task<IActionResult> GetMyDispenses()
+        {
+            var patientIdClaim = User.FindFirstValue("patientId");
+            if (!int.TryParse(patientIdClaim, out int patientId))
+                return Unauthorized();
+
+            var dispenses = await _pharmacyDispenseService.GetDispensesByPatientAsync(patientId);
+            return Ok(dispenses);
+        }
+
         [HttpGet]
         [Authorize(Roles = "Doctor,Nurse,Admin")]
         public async Task<IActionResult> GetAllDispenses()
