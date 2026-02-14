@@ -21,7 +21,7 @@ namespace Sanalink.API.Migrations
                 table: "Patients",
                 column: "UserId",
                 unique: true,
-                filter: "[UserId] IS NOT NULL");
+                filter: "\"UserId\" IS NOT NULL");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Patients_AspNetUsers_UserId",

@@ -102,7 +102,7 @@ namespace Sanalink.API.Data
             builder.Entity<Patient>()
                 .HasIndex(p => p.UserId)
                 .IsUnique()
-                .HasFilter("[UserId] IS NOT NULL");
+                .HasFilter("\"UserId\" IS NOT NULL");
 
             // STEP: Apply UTC DateTime converter globally
             var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
