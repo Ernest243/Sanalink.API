@@ -26,6 +26,7 @@ builder.Services.AddScoped<IEncounterService, EncounterService>();
 builder.Services.AddScoped<IFacilityService, FacilityService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<ILabOrderService, LabOrderService>();
+builder.Services.AddScoped<IPharmacyDispenseService, PharmacyDispenseService>();
 
 builder.Services.AddCors(options =>
 {
