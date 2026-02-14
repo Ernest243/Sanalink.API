@@ -18,6 +18,18 @@ namespace Sanalink.API.Controllers
             _labOrderService = labOrderService;
         }
 
+        [HttpGet("my")]
+        [Authorize(Roles = "Patient")]
+        public async Task<IActionResult> GetMyLabOrders()
+        {
+            var patientIdClaim = User.FindFirstValue("patientId");
+            if (!int.TryParse(patientIdClaim, out int patientId))
+                return Unauthorized();
+
+            var labOrders = await _labOrderService.GetLabOrdersByPatientAsync(patientId);
+            return Ok(labOrders);
+        }
+
         [HttpGet]
         [Authorize(Roles = "Doctor,Nurse,Admin")]
         public async Task<IActionResult> GetAllLabOrders()

@@ -13,7 +13,7 @@ public class RoleSeeder : IRoleSeeder
 
     public async Task SeedRolesAsync()
     {
-        var roles = new[] { "Admin", "Doctor", "Nurse" };
+        var roles = new[] { "Admin", "Doctor", "Nurse", "Patient" };
 
         foreach (var role in roles)
         {

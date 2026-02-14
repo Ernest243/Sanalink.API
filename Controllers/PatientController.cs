@@ -25,6 +25,20 @@ public class PatientController : ControllerBase
         return facilityId;
     }
 
+    [HttpGet("me")]
+    [Authorize(Roles = "Patient")]
+    public async Task<IActionResult> GetMyProfile()
+    {
+        var patientIdClaim = User.FindFirstValue("patientId");
+        if (!int.TryParse(patientIdClaim, out int patientId))
+            return Unauthorized();
+
+        var patient = await _db.Patients.FindAsync(patientId);
+        if (patient == null) return NotFound();
+
+        return Ok(patient);
+    }
+
     // GET: /api/patient
     [HttpGet]
     [Authorize(Roles = "Doctor,Nurse,Admin")]

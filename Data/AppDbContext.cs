@@ -92,6 +92,18 @@ namespace Sanalink.API.Data
                 .HasForeignKey(d => d.DispensedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Patient -> ApplicationUser (optional FK for self-registered patients)
+            builder.Entity<Patient>()
+                .HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Patient>()
+                .HasIndex(p => p.UserId)
+                .IsUnique()
+                .HasFilter("[UserId] IS NOT NULL");
+
             // STEP: Apply UTC DateTime converter globally
             var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
             v => v.ToUniversalTime(),
