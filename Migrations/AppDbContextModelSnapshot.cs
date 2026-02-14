@@ -568,7 +568,7 @@ namespace Sanalink.API.Migrations
 
                     b.HasIndex("UserId")
                         .IsUnique()
-                        .HasFilter("[UserId] IS NOT NULL");
+                        .HasFilter("\"UserId\" IS NOT NULL");
 
                     b.ToTable("Patients");
                 });

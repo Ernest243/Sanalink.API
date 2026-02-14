@@ -12,7 +12,7 @@ using Sanalink.API.Data;
 namespace Sanalink.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260214013352_AddPatientUserIdLink")]
+    [Migration("20260214015745_AddPatientUserIdLink")]
     partial class AddPatientUserIdLink
     {
         /// <inheritdoc />
@@ -571,7 +571,7 @@ namespace Sanalink.API.Migrations
 
                     b.HasIndex("UserId")
                         .IsUnique()
-                        .HasFilter("[UserId] IS NOT NULL");
+                        .HasFilter("\"UserId\" IS NOT NULL");
 
                     b.ToTable("Patients");
                 });
