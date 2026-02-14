@@ -139,6 +139,7 @@ using (var scope = app.Services.CreateScope())
 
     var seeder = scope.ServiceProvider.GetRequiredService<IRoleSeeder>();
     await seeder.SeedRolesAsync();
+    await seeder.SeedAdminUserAsync();
 }
 
 app.Run();
