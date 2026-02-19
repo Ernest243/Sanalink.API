@@ -1,0 +1,850 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "SanaLink API",
+    "description": "Complete Postman collection for the SanaLink EHR REST API.\n\n**Setup:**\n1. Set the `base_url` collection variable to `http://localhost:5189`\n2. Run the **Login** request under the Auth folder\n3. The test script saves the token automatically — all authenticated requests will work immediately\n\n**Default Admin credentials:** admin@sanalink.com / Admin@123456",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5189",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "Populated automatically by the Login request test script"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "health"]
+            },
+            "description": "Public. Returns API status and current UTC timestamp."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) {",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "    console.log('Token saved to collection variable.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@sanalink.com\",\n  \"password\": \"Admin@123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Public. Returns a JWT bearer token (4-hour expiry). The test script automatically saves it to the `token` collection variable."
+          }
+        },
+        {
+          "name": "Register Patient",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"Patient@123\",\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"dateOfBirth\": \"1990-06-15T00:00:00Z\",\n  \"gender\": \"Female\",\n  \"facilityId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "description": "Public. Registers a new patient account and returns a JWT token. A linked Patient record is created automatically."
+          }
+        },
+        {
+          "name": "Register Staff",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dr. John Smith\",\n  \"email\": \"dr.john@sanalink.com\",\n  \"password\": \"Doctor@123456\",\n  \"role\": \"Doctor\",\n  \"department\": \"General Medicine\",\n  \"facilityId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register-staff",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register-staff"]
+            },
+            "description": "Admin only. Register a new staff member. Valid roles: Doctor, Nurse, Admin."
+          }
+        },
+        {
+          "name": "Get Active Staff Count",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/active-staff-count",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "active-staff-count"]
+            },
+            "description": "Admin, Doctor, Nurse. Returns count of active doctors and nurses in the caller's facility."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Facilities",
+      "item": [
+        {
+          "name": "Get All Facilities",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/facility",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "facility"]
+            },
+            "description": "Admin only. Returns all registered facilities."
+          }
+        },
+        {
+          "name": "Get Facility by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/facility/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "facility", "1"]
+            },
+            "description": "Admin only. Returns a single facility by ID."
+          }
+        },
+        {
+          "name": "Create Facility",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"City General Hospital\",\n  \"address\": \"123 Main Street, Kampala\",\n  \"phone\": \"+256700000001\",\n  \"email\": \"info@citygeneral.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/facility",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "facility"]
+            },
+            "description": "Admin only. Creates a new healthcare facility. The returned ID is required when registering staff and patients."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/patient/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "patient", "me"]
+            },
+            "description": "Patient only. Returns the authenticated patient's own record."
+          }
+        },
+        {
+          "name": "Get All Patients",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/patient",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "patient"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns all patients within the caller's facility, newest first."
+          }
+        },
+        {
+          "name": "Get Patient by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/patient/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "patient", "1"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns a single patient record by ID."
+          }
+        },
+        {
+          "name": "Create Patient",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Alice\",\n  \"lastName\": \"Namukasa\",\n  \"dateOfBirth\": \"1985-03-20T00:00:00Z\",\n  \"gender\": \"Female\",\n  \"facilityId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/patient",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "patient"]
+            },
+            "description": "Doctor only. Creates a patient record directly without a patient portal account."
+          }
+        },
+        {
+          "name": "Update Patient",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Alice\",\n  \"lastName\": \"Namukasa\",\n  \"dateOfBirth\": \"1985-03-20T00:00:00Z\",\n  \"gender\": \"Female\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/patient/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "patient", "1"]
+            },
+            "description": "Doctor only. Updates demographic details for an existing patient."
+          }
+        },
+        {
+          "name": "Search Patients",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/patient/search?query=alice",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "patient", "search"],
+              "query": [{ "key": "query", "value": "alice" }]
+            },
+            "description": "Doctor, Nurse, Admin. Search by first or last name. Returns up to 10 matches."
+          }
+        },
+        {
+          "name": "Recent Registrations Count",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/patient/recent",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "patient", "recent"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns the count of patients registered in the last 7 days."
+          }
+        },
+        {
+          "name": "Registrations Last 7 Days",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/patient/registrations/last7days",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "patient", "registrations", "last7days"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns daily registration counts for each of the last 7 days (suitable for charting)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Get All Appointments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/appointment",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointment"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns all appointments with patient and doctor details, newest first."
+          }
+        },
+        {
+          "name": "Get Appointment by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/appointment/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointment", "1"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns a single appointment by ID."
+          }
+        },
+        {
+          "name": "Book Appointment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": 1,\n  \"doctorId\": \"<doctor-user-id-guid>\",\n  \"date\": \"2026-03-01T10:00:00Z\",\n  \"reason\": \"Follow-up consultation\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/appointment",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointment"]
+            },
+            "description": "Doctor, Nurse, Admin. Books a new appointment. Status defaults to 'Scheduled'."
+          }
+        },
+        {
+          "name": "Update Appointment",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-03-05T14:00:00Z\",\n  \"reason\": \"Follow-up consultation (rescheduled)\",\n  \"status\": \"Scheduled\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/appointment/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointment", "1"]
+            },
+            "description": "Doctor only. Updates date, reason, and status. Valid statuses: Scheduled, Completed, Cancelled."
+          }
+        },
+        {
+          "name": "Cancel Appointment",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/appointment/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointment", "1"]
+            },
+            "description": "Doctor, Admin. Soft-cancels an appointment by setting its status to 'Cancelled'."
+          }
+        },
+        {
+          "name": "Appointments Per Day",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/appointment/appointments-per-day",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointment", "appointments-per-day"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns appointment counts per day for the last 10 days."
+          }
+        },
+        {
+          "name": "Appointment Analytics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/appointment/analytics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointment", "analytics"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns totals by status, total patients, and total prescriptions."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Encounters",
+      "item": [
+        {
+          "name": "Get My Encounters",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/encounter/my",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "encounter", "my"]
+            },
+            "description": "Patient only. Returns the authenticated patient's own encounter history."
+          }
+        },
+        {
+          "name": "Get All Encounters",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/encounter",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "encounter"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns all clinical encounters."
+          }
+        },
+        {
+          "name": "Get Encounter by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/encounter/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "encounter", "1"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns a single encounter by ID."
+          }
+        },
+        {
+          "name": "Get Encounters by Patient",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/encounter/patient/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "encounter", "patient", "1"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns all encounters for a specific patient."
+          }
+        },
+        {
+          "name": "Create Encounter",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": 1,\n  \"chiefComplaint\": \"Persistent headache and fever for 3 days\",\n  \"vitals\": \"BP: 120/80, Temp: 38.2°C, HR: 88 bpm\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/encounter",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "encounter"]
+            },
+            "description": "Doctor only. Opens a new clinical encounter for a patient."
+          }
+        },
+        {
+          "name": "Update Encounter",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chiefComplaint\": \"Persistent headache and fever\",\n  \"vitals\": \"BP: 118/76, Temp: 37.8°C, HR: 82 bpm\",\n  \"diagnosis\": \"Viral fever\",\n  \"clinicalNotes\": \"Patient advised rest and increased fluid intake.\",\n  \"nurseId\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/encounter/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "encounter", "1"]
+            },
+            "description": "Doctor, Nurse. Updates encounter details including vitals, diagnosis, and clinical notes."
+          }
+        },
+        {
+          "name": "Update Encounter Status",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "\"Completed\""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/encounter/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "encounter", "1", "status"]
+            },
+            "description": "Doctor only. Advances the encounter through its status workflow."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notes",
+      "item": [
+        {
+          "name": "Get Notes for Patient",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/notes/patient/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "notes", "patient", "1"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns all clinical notes for a specific patient."
+          }
+        },
+        {
+          "name": "Create Note",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": 1,\n  \"content\": \"Patient reports improvement after 48 hours on prescribed medication. Follow-up in one week.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/notes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "notes"]
+            },
+            "description": "Doctor, Nurse, Admin. Creates a free-text clinical note linked to a patient."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Prescriptions",
+      "item": [
+        {
+          "name": "Get My Prescriptions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/prescriptions/my",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "prescriptions", "my"]
+            },
+            "description": "Patient only. Returns the authenticated patient's own prescriptions."
+          }
+        },
+        {
+          "name": "Get All Prescriptions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/prescriptions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "prescriptions"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns all prescriptions."
+          }
+        },
+        {
+          "name": "Get Prescriptions for Patient",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/prescriptions/patient/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "prescriptions", "patient", "1"]
+            },
+            "description": "Any authenticated user. Returns all prescriptions for a specific patient."
+          }
+        },
+        {
+          "name": "Create Prescription",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": 1,\n  \"medicationName\": \"Amoxicillin 500mg\",\n  \"dosage\": \"1 capsule\",\n  \"instructions\": \"Take 3 times daily after meals for 7 days\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/prescriptions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "prescriptions"]
+            },
+            "description": "Doctor, Nurse, Admin. Issues a new prescription for a patient."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lab Orders",
+      "item": [
+        {
+          "name": "Get My Lab Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/laborder/my",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "laborder", "my"]
+            },
+            "description": "Patient only. Returns lab orders for the authenticated patient."
+          }
+        },
+        {
+          "name": "Get All Lab Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/laborder",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "laborder"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns all lab orders."
+          }
+        },
+        {
+          "name": "Get Lab Order by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/laborder/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "laborder", "1"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns a single lab order by ID."
+          }
+        },
+        {
+          "name": "Get Lab Orders by Encounter",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/laborder/encounter/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "laborder", "encounter", "1"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns all lab orders for a specific encounter."
+          }
+        },
+        {
+          "name": "Get Lab Orders by Patient",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/laborder/patient/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "laborder", "patient", "1"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns all lab orders for a specific patient."
+          }
+        },
+        {
+          "name": "Create Lab Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"encounterId\": 1,\n  \"patientId\": 1,\n  \"testName\": \"Full Blood Count (FBC)\",\n  \"testCategory\": \"Haematology\",\n  \"priority\": \"Routine\",\n  \"clinicalNotes\": \"Check for anaemia and infection markers\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/laborder",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "laborder"]
+            },
+            "description": "Doctor only. Creates a lab test order for a patient within an encounter."
+          }
+        },
+        {
+          "name": "Update Lab Order",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"testName\": \"Full Blood Count (FBC)\",\n  \"testCategory\": \"Haematology\",\n  \"priority\": \"Urgent\",\n  \"clinicalNotes\": \"Elevated WBC — suspect infection\",\n  \"result\": \"WBC: 12.5 x10^9/L, HGB: 10.2 g/dL\",\n  \"resultNotes\": \"Mild anaemia with leukocytosis\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/laborder/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "laborder", "1"]
+            },
+            "description": "Doctor, Nurse. Updates lab order details and can record test results."
+          }
+        },
+        {
+          "name": "Update Lab Order Status",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "\"Completed\""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/laborder/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "laborder", "1", "status"]
+            },
+            "description": "Doctor, Nurse. Advances the lab order through its status workflow."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pharmacy Dispenses",
+      "item": [
+        {
+          "name": "Get My Dispenses",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/pharmacydispense/my",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pharmacydispense", "my"]
+            },
+            "description": "Patient only. Returns dispense records for the authenticated patient."
+          }
+        },
+        {
+          "name": "Get All Dispenses",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/pharmacydispense",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pharmacydispense"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns all pharmacy dispense records."
+          }
+        },
+        {
+          "name": "Get Dispense by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/pharmacydispense/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pharmacydispense", "1"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns a single dispense record by ID."
+          }
+        },
+        {
+          "name": "Get Dispenses by Prescription",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/pharmacydispense/prescription/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pharmacydispense", "prescription", "1"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns all dispenses linked to a specific prescription."
+          }
+        },
+        {
+          "name": "Get Dispenses by Patient",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/pharmacydispense/patient/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pharmacydispense", "patient", "1"]
+            },
+            "description": "Doctor, Nurse, Admin. Returns all dispenses for a specific patient."
+          }
+        },
+        {
+          "name": "Create Dispense",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prescriptionId\": 1,\n  \"patientId\": 1,\n  \"medicationName\": \"Amoxicillin 500mg\",\n  \"quantityDispensed\": \"21 capsules\",\n  \"notes\": \"Full course dispensed as prescribed\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/pharmacydispense",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pharmacydispense"]
+            },
+            "description": "Doctor, Nurse. Records a medication dispense event against a prescription."
+          }
+        },
+        {
+          "name": "Update Dispense",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"medicationName\": \"Amoxicillin 500mg\",\n  \"quantityDispensed\": \"14 capsules\",\n  \"notes\": \"Partial dispense — awaiting stock\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/pharmacydispense/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pharmacydispense", "1"]
+            },
+            "description": "Doctor, Nurse. Updates an existing dispense record."
+          }
+        },
+        {
+          "name": "Update Dispense Status",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "\"Dispensed\""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/pharmacydispense/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pharmacydispense", "1", "status"]
+            },
+            "description": "Doctor, Nurse. Advances the dispense record through its status workflow."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit Logs",
+      "item": [
+        {
+          "name": "Get All Audit Logs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/auditlog",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auditlog"]
+            },
+            "description": "Admin only. Returns all system audit log entries."
+          }
+        },
+        {
+          "name": "Get Audit Logs by User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/auditlog/user/<user-id-guid>",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auditlog", "user", "<user-id-guid>"]
+            },
+            "description": "Admin only. Returns all audit log entries for a specific user (GUID string)."
+          }
+        }
+      ]
+    }
+  ]
+}
