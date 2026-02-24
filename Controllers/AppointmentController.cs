@@ -20,11 +20,10 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Doctor, Nurse, Admin")]
+    [Authorize(Roles = "Doctor,Nurse,Admin,Accueil")]
     public async Task<IActionResult> GetAppointment()
     {
         var appointments = await _db.Appointments
-            .Include(a => a.Patient)
             .Include(a => a.Doctor)
             .OrderByDescending(a => a.Date)
             .ToListAsync();
@@ -33,11 +32,10 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize(Roles = "Doctor, Nurse, Admin")]
+    [Authorize(Roles = "Doctor,Nurse,Admin,Accueil")]
     public async Task<IActionResult> GetById(int id)
     {
         var appt = await _db.Appointments
-            .Include(a => a.Patient)
             .Include(a => a.Doctor)
             .FirstOrDefaultAsync(a => a.Id == id);
 
@@ -45,7 +43,7 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Doctor, Nurse, Admin")]
+    [Authorize(Roles = "Doctor,Nurse,Admin,Accueil")]
     public async Task<IActionResult> BookAppointment([FromBody] AppointmentCreateDto dto)
     {
         var appointment = new Appointment
@@ -65,7 +63,7 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Doctor")]
+    [Authorize(Roles = "Doctor,Accueil")]
     public async Task<IActionResult> Update(int id, Appointment update)
     {
         var appt = await _db.Appointments.FindAsync(id);
@@ -80,7 +78,7 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Doctor,Admin")]
+    [Authorize(Roles = "Doctor,Admin,Accueil")]
     public async Task<IActionResult> Cancel(int id)
     {
         var appt = await _db.Appointments.FindAsync(id);
@@ -93,7 +91,7 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpGet("appointments-per-day")]
-    [Authorize(Roles = "Doctor,Admin, Nurse")]
+    [Authorize(Roles = "Doctor,Admin,Nurse,Accueil")]
     public async Task<IActionResult> GetAppointmentsPerDay()
     {
         var now = DateTime.UtcNow;
@@ -121,7 +119,7 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpGet("analytics")]
-    [Authorize(Roles = "Doctor,Admin, Nurse")]
+    [Authorize(Roles = "Doctor,Admin,Nurse,Accueil")]
     public async Task<IActionResult> GetAppointmentAnalytics()
     {
         var appointments = await _db.Appointments.ToListAsync();
@@ -130,7 +128,6 @@ public class AppointmentController : ControllerBase
         var completed = appointments.Count(a => a.Status == "Completed");
         var cancelled = appointments.Count(a => a.Status == "Cancelled");
 
-        var totalPatients = await _db.Patients.CountAsync();
         var totalPrescriptions = await _db.Prescriptions.CountAsync();
 
         return Ok(new
@@ -139,9 +136,7 @@ public class AppointmentController : ControllerBase
             scheduled,
             completed,
             cancelled,
-            totalPatients,
             totalPrescriptions
         });
     }
-
 }

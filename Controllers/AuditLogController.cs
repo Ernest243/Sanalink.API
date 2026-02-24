@@ -6,7 +6,7 @@ namespace Sanalink.API.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,DAF")]
     public class AuditLogController : ControllerBase
     {
         private readonly IAuditLogService _auditLogService;

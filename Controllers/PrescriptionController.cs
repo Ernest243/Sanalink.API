@@ -18,20 +18,8 @@ namespace Sanalink.API.Controllers
             _service = service;
         }
 
-        [HttpGet("my")]
-        [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> GetMyPrescriptions()
-        {
-            var patientIdClaim = User.FindFirstValue("patientId");
-            if (!int.TryParse(patientIdClaim, out int patientId))
-                return Unauthorized();
-
-            var prescriptions = await _service.GetPrescriptionsForPatientAsync(patientId);
-            return Ok(prescriptions);
-        }
-
         [HttpGet]
-        [Authorize(Roles = "Doctor, Nurse, Admin")]
+        [Authorize(Roles = "Doctor,Nurse,Admin,Pharmacist")]
         public async Task<IActionResult> GetAllPrescriptions()
         {
             var prescriptions = await _service.GetAllPrescriptionsAsync();
@@ -39,6 +27,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpGet("patient/{patientId}")]
+        [Authorize(Roles = "Doctor,Nurse,Admin,Pharmacist")]
         public async Task<IActionResult> GetPrescriptionsForPatient(int patientId)
         {
             var prescriptions = await _service.GetPrescriptionsForPatientAsync(patientId);
@@ -46,7 +35,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Doctor,Nurse,Admin")]
+        [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> CreatePrescription([FromBody] PrescriptionCreateDto dto)
         {
             var doctorId = User.FindFirstValue(ClaimTypes.NameIdentifier);

@@ -32,63 +32,13 @@ public class AuthController : ControllerBase
         _db = db;
     }
 
-    [HttpPost("register")]
-    public async Task<IActionResult> Register(PatientRegisterDto dto)
-    {
-        var existingUser = await _userManager.FindByNameAsync(dto.Email);
-        if (existingUser != null)
-            return BadRequest("User already exists");
-
-        var facility = await _db.Facilities.FindAsync(dto.FacilityId);
-        if (facility == null)
-            return BadRequest("Invalid FacilityId");
-
-        await using var transaction = await _db.Database.BeginTransactionAsync();
-
-        var user = new ApplicationUser
-        {
-            UserName = dto.Email,
-            Email = dto.Email,
-            FullName = $"{dto.FirstName} {dto.LastName}",
-            Role = "Patient",
-            FacilityId = dto.FacilityId,
-            EmailConfirmed = true,
-            IsActive = true
-        };
-
-        var result = await _userManager.CreateAsync(user, dto.Password);
-        if (!result.Succeeded)
-            return BadRequest(result.Errors);
-
-        await _userManager.AddToRoleAsync(user, "Patient");
-
-        var patient = new Patient
-        {
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            DateOfBirth = dto.DateOfBirth,
-            Gender = dto.Gender,
-            FacilityId = dto.FacilityId,
-            UserId = user.Id,
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = user.Id
-        };
-
-        _db.Patients.Add(patient);
-        await _db.SaveChangesAsync();
-        await transaction.CommitAsync();
-
-        var token = GenerateJwtToken(user, patient.Id);
-        return Ok(new { token });
-    }
-
     [HttpPost("register-staff")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> RegisterStaff(StaffRegisterDto dto)
     {
-        var allowedRoles = new[] { "Doctor", "Nurse", "Admin" };
+        var allowedRoles = new[] { "Doctor", "Nurse", "Admin", "Accueil", "Caisse", "DAF", "LabTech", "Pharmacist" };
         if (!allowedRoles.Contains(dto.Role))
-            return BadRequest("Role must be one of: Doctor, Nurse, Admin");
+            return BadRequest($"Role must be one of: {string.Join(", ", allowedRoles)}");
 
         var existingUser = await _userManager.FindByNameAsync(dto.Email);
         if (existingUser != null)
@@ -126,19 +76,12 @@ public class AuthController : ControllerBase
         if (!result.Succeeded)
             return Unauthorized("Invalid credentials");
 
-        int? patientId = null;
-        if (user.Role == "Patient")
-        {
-            var patient = await _db.Patients.FirstOrDefaultAsync(p => p.UserId == user.Id);
-            patientId = patient?.Id;
-        }
-
-        var token = GenerateJwtToken(user, patientId);
+        var token = GenerateJwtToken(user);
         return Ok(new { token });
     }
 
     [HttpGet("active-staff-count")]
-    [Authorize(Roles = "Admin, Doctor, Nurse")]
+    [Authorize(Roles = "Admin,Doctor,Nurse,DAF")]
     public async Task<IActionResult> GetActiveStaffCount()
     {
         var facilityIdClaim = User.FindFirstValue("facilityId");
@@ -162,7 +105,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    private string GenerateJwtToken(ApplicationUser user, int? patientId = null)
+    private string GenerateJwtToken(ApplicationUser user)
     {
         var claims = new List<Claim>
         {
@@ -171,9 +114,6 @@ public class AuthController : ControllerBase
             new Claim("role", user.Role ?? ""),
             new Claim("facilityId", user.FacilityId?.ToString() ?? "")
         };
-
-        if (patientId.HasValue)
-            claims.Add(new Claim("patientId", patientId.Value.ToString()));
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

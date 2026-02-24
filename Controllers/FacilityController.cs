@@ -18,7 +18,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,DAF")]
         public async Task<IActionResult> GetAllFacilities()
         {
             var facilities = await _facilityService.GetAllFacilitiesAsync();
@@ -26,7 +26,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,DAF")]
         public async Task<IActionResult> GetFacilityById(int id)
         {
             var facility = await _facilityService.GetFacilityByIdAsync(id);
@@ -35,7 +35,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,DAF")]
         public async Task<IActionResult> CreateFacility([FromBody] FacilityCreateDto dto)
         {
             var result = await _facilityService.CreateFacilityAsync(dto);

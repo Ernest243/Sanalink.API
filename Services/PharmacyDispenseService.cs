@@ -17,7 +17,6 @@ namespace Sanalink.API.Services
         public async Task<IEnumerable<PharmacyDispenseReadDto>> GetAllDispensesAsync()
         {
             return await _context.PharmacyDispenses
-                .Include(d => d.Patient)
                 .Include(d => d.DispensedBy)
                 .OrderByDescending(d => d.CreatedAt)
                 .Select(d => MapToReadDto(d))
@@ -27,7 +26,6 @@ namespace Sanalink.API.Services
         public async Task<PharmacyDispenseReadDto?> GetDispenseByIdAsync(int id)
         {
             var dispense = await _context.PharmacyDispenses
-                .Include(d => d.Patient)
                 .Include(d => d.DispensedBy)
                 .FirstOrDefaultAsync(d => d.Id == id);
 
@@ -40,7 +38,6 @@ namespace Sanalink.API.Services
         {
             return await _context.PharmacyDispenses
                 .Where(d => d.PrescriptionId == prescriptionId)
-                .Include(d => d.Patient)
                 .Include(d => d.DispensedBy)
                 .OrderByDescending(d => d.CreatedAt)
                 .Select(d => MapToReadDto(d))
@@ -51,7 +48,6 @@ namespace Sanalink.API.Services
         {
             return await _context.PharmacyDispenses
                 .Where(d => d.PatientId == patientId)
-                .Include(d => d.Patient)
                 .Include(d => d.DispensedBy)
                 .OrderByDescending(d => d.CreatedAt)
                 .Select(d => MapToReadDto(d))
@@ -76,7 +72,6 @@ namespace Sanalink.API.Services
             await _context.SaveChangesAsync();
 
             var created = await _context.PharmacyDispenses
-                .Include(d => d.Patient)
                 .Include(d => d.DispensedBy)
                 .FirstAsync(d => d.Id == dispense.Id);
 
@@ -86,7 +81,6 @@ namespace Sanalink.API.Services
         public async Task<PharmacyDispenseReadDto?> UpdateDispenseAsync(int id, PharmacyDispenseUpdateDto dto)
         {
             var dispense = await _context.PharmacyDispenses
-                .Include(d => d.Patient)
                 .Include(d => d.DispensedBy)
                 .FirstOrDefaultAsync(d => d.Id == id);
 
@@ -134,7 +128,6 @@ namespace Sanalink.API.Services
                 Id = d.Id,
                 PrescriptionId = d.PrescriptionId,
                 PatientId = d.PatientId,
-                PatientName = d.Patient.FirstName + " " + d.Patient.LastName,
                 DispensedByName = d.DispensedBy.FullName ?? d.DispensedBy.UserName!,
                 MedicationName = d.MedicationName,
                 QuantityDispensed = d.QuantityDispensed,
