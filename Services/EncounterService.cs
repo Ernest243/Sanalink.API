@@ -17,7 +17,6 @@ namespace Sanalink.API.Services
         public async Task<IEnumerable<EncounterReadDto>> GetAllEncountersAsync()
         {
             return await _context.Encounters
-                .Include(e => e.Patient)
                 .Include(e => e.Doctor)
                 .Include(e => e.Nurse)
                 .OrderByDescending(e => e.CreatedAt)
@@ -28,7 +27,6 @@ namespace Sanalink.API.Services
         public async Task<EncounterReadDto?> GetEncounterByIdAsync(int id)
         {
             var encounter = await _context.Encounters
-                .Include(e => e.Patient)
                 .Include(e => e.Doctor)
                 .Include(e => e.Nurse)
                 .FirstOrDefaultAsync(e => e.Id == id);
@@ -42,7 +40,6 @@ namespace Sanalink.API.Services
         {
             return await _context.Encounters
                 .Where(e => e.PatientId == patientId)
-                .Include(e => e.Patient)
                 .Include(e => e.Doctor)
                 .Include(e => e.Nurse)
                 .OrderByDescending(e => e.CreatedAt)
@@ -70,7 +67,6 @@ namespace Sanalink.API.Services
 
             // Reload with navigation properties
             var created = await _context.Encounters
-                .Include(e => e.Patient)
                 .Include(e => e.Doctor)
                 .Include(e => e.Nurse)
                 .FirstAsync(e => e.Id == encounter.Id);
@@ -81,7 +77,6 @@ namespace Sanalink.API.Services
         public async Task<EncounterReadDto?> UpdateEncounterAsync(int id, EncounterUpdateDto dto)
         {
             var encounter = await _context.Encounters
-                .Include(e => e.Patient)
                 .Include(e => e.Doctor)
                 .Include(e => e.Nurse)
                 .FirstOrDefaultAsync(e => e.Id == id);
@@ -160,7 +155,6 @@ namespace Sanalink.API.Services
                 Id = e.Id,
                 EncounterNumber = e.EncounterNumber,
                 PatientId = e.PatientId,
-                PatientName = e.Patient.FirstName + " " + e.Patient.LastName,
                 DoctorName = e.Doctor.FullName ?? e.Doctor.UserName!,
                 NurseName = e.Nurse?.FullName ?? e.Nurse?.UserName,
                 Status = e.Status,

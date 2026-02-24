@@ -18,20 +18,8 @@ namespace Sanalink.API.Controllers
             _encounterService = encounterService;
         }
 
-        [HttpGet("my")]
-        [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> GetMyEncounters()
-        {
-            var patientIdClaim = User.FindFirstValue("patientId");
-            if (!int.TryParse(patientIdClaim, out int patientId))
-                return Unauthorized();
-
-            var encounters = await _encounterService.GetEncountersByPatientAsync(patientId);
-            return Ok(encounters);
-        }
-
         [HttpGet]
-        [Authorize(Roles = "Doctor,Nurse,Admin")]
+        [Authorize(Roles = "Doctor,Nurse,Admin,Accueil")]
         public async Task<IActionResult> GetAllEncounters()
         {
             var encounters = await _encounterService.GetAllEncountersAsync();
@@ -39,7 +27,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Doctor,Nurse,Admin")]
+        [Authorize(Roles = "Doctor,Nurse,Admin,Accueil")]
         public async Task<IActionResult> GetEncounterById(int id)
         {
             var encounter = await _encounterService.GetEncounterByIdAsync(id);
@@ -48,7 +36,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpGet("patient/{patientId}")]
-        [Authorize(Roles = "Doctor,Nurse,Admin")]
+        [Authorize(Roles = "Doctor,Nurse,Admin,Accueil")]
         public async Task<IActionResult> GetEncountersByPatient(int patientId)
         {
             var encounters = await _encounterService.GetEncountersByPatientAsync(patientId);

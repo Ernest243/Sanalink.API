@@ -16,9 +16,6 @@ namespace Sanalink.API.Models
         [Required]
         public int PatientId { get; set; }
 
-        [ForeignKey("PatientId")]
-        public Patient Patient { get; set; } = default!;
-
         [Required]
         public string DispensedById { get; set; } = default!;
 

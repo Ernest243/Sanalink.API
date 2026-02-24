@@ -18,20 +18,8 @@ namespace Sanalink.API.Controllers
             _pharmacyDispenseService = pharmacyDispenseService;
         }
 
-        [HttpGet("my")]
-        [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> GetMyDispenses()
-        {
-            var patientIdClaim = User.FindFirstValue("patientId");
-            if (!int.TryParse(patientIdClaim, out int patientId))
-                return Unauthorized();
-
-            var dispenses = await _pharmacyDispenseService.GetDispensesByPatientAsync(patientId);
-            return Ok(dispenses);
-        }
-
         [HttpGet]
-        [Authorize(Roles = "Doctor,Nurse,Admin")]
+        [Authorize(Roles = "Doctor,Nurse,Admin,Pharmacist")]
         public async Task<IActionResult> GetAllDispenses()
         {
             var dispenses = await _pharmacyDispenseService.GetAllDispensesAsync();
@@ -39,7 +27,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Doctor,Nurse,Admin")]
+        [Authorize(Roles = "Doctor,Nurse,Admin,Pharmacist")]
         public async Task<IActionResult> GetDispenseById(int id)
         {
             var dispense = await _pharmacyDispenseService.GetDispenseByIdAsync(id);
@@ -48,7 +36,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpGet("prescription/{prescriptionId}")]
-        [Authorize(Roles = "Doctor,Nurse,Admin")]
+        [Authorize(Roles = "Doctor,Nurse,Admin,Pharmacist")]
         public async Task<IActionResult> GetDispensesByPrescription(int prescriptionId)
         {
             var dispenses = await _pharmacyDispenseService.GetDispensesByPrescriptionAsync(prescriptionId);
@@ -56,7 +44,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpGet("patient/{patientId}")]
-        [Authorize(Roles = "Doctor,Nurse,Admin")]
+        [Authorize(Roles = "Doctor,Nurse,Admin,Pharmacist")]
         public async Task<IActionResult> GetDispensesByPatient(int patientId)
         {
             var dispenses = await _pharmacyDispenseService.GetDispensesByPatientAsync(patientId);
@@ -64,7 +52,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Doctor,Nurse")]
+        [Authorize(Roles = "Pharmacist")]
         public async Task<IActionResult> CreateDispense([FromBody] PharmacyDispenseCreateDto dto)
         {
             var dispensedById = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -76,7 +64,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Doctor,Nurse")]
+        [Authorize(Roles = "Pharmacist")]
         public async Task<IActionResult> UpdateDispense(int id, [FromBody] PharmacyDispenseUpdateDto dto)
         {
             var result = await _pharmacyDispenseService.UpdateDispenseAsync(id, dto);
@@ -85,7 +73,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpPut("{id}/status")]
-        [Authorize(Roles = "Doctor,Nurse")]
+        [Authorize(Roles = "Pharmacist")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] string newStatus)
         {
             var success = await _pharmacyDispenseService.UpdateStatusAsync(id, newStatus);

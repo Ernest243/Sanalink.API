@@ -18,20 +18,8 @@ namespace Sanalink.API.Controllers
             _labOrderService = labOrderService;
         }
 
-        [HttpGet("my")]
-        [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> GetMyLabOrders()
-        {
-            var patientIdClaim = User.FindFirstValue("patientId");
-            if (!int.TryParse(patientIdClaim, out int patientId))
-                return Unauthorized();
-
-            var labOrders = await _labOrderService.GetLabOrdersByPatientAsync(patientId);
-            return Ok(labOrders);
-        }
-
         [HttpGet]
-        [Authorize(Roles = "Doctor,Nurse,Admin")]
+        [Authorize(Roles = "Doctor,Nurse,Admin,LabTech")]
         public async Task<IActionResult> GetAllLabOrders()
         {
             var labOrders = await _labOrderService.GetAllLabOrdersAsync();
@@ -39,7 +27,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Doctor,Nurse,Admin")]
+        [Authorize(Roles = "Doctor,Nurse,Admin,LabTech")]
         public async Task<IActionResult> GetLabOrderById(int id)
         {
             var labOrder = await _labOrderService.GetLabOrderByIdAsync(id);
@@ -48,7 +36,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpGet("encounter/{encounterId}")]
-        [Authorize(Roles = "Doctor,Nurse,Admin")]
+        [Authorize(Roles = "Doctor,Nurse,Admin,LabTech")]
         public async Task<IActionResult> GetLabOrdersByEncounter(int encounterId)
         {
             var labOrders = await _labOrderService.GetLabOrdersByEncounterAsync(encounterId);
@@ -56,7 +44,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpGet("patient/{patientId}")]
-        [Authorize(Roles = "Doctor,Nurse,Admin")]
+        [Authorize(Roles = "Doctor,Nurse,Admin,LabTech")]
         public async Task<IActionResult> GetLabOrdersByPatient(int patientId)
         {
             var labOrders = await _labOrderService.GetLabOrdersByPatientAsync(patientId);
@@ -76,7 +64,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Doctor,Nurse")]
+        [Authorize(Roles = "Doctor,LabTech")]
         public async Task<IActionResult> UpdateLabOrder(int id, [FromBody] LabOrderUpdateDto dto)
         {
             var result = await _labOrderService.UpdateLabOrderAsync(id, dto);
@@ -85,7 +73,7 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpPut("{id}/status")]
-        [Authorize(Roles = "Doctor,Nurse")]
+        [Authorize(Roles = "Doctor,LabTech")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] string newStatus)
         {
             var success = await _labOrderService.UpdateStatusAsync(id, newStatus);
