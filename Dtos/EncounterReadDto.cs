@@ -5,6 +5,7 @@ namespace Sanalink.API.DTOs
         public int Id { get; set; }
         public string EncounterNumber { get; set; } = default!;
         public int PatientId { get; set; }
+        public string PatientName { get; set; } = default!;
         public string DoctorName { get; set; } = default!;
         public string? NurseName { get; set; }
         public string Status { get; set; } = default!;

@@ -17,6 +17,7 @@ namespace Sanalink.API.Services
         public async Task<IEnumerable<LabOrderReadDto>> GetAllLabOrdersAsync()
         {
             return await _context.LabOrders
+                .Include(l => l.Patient)
                 .Include(l => l.Doctor)
                 .OrderByDescending(l => l.OrderedAt)
                 .Select(l => MapToReadDto(l))
@@ -26,6 +27,7 @@ namespace Sanalink.API.Services
         public async Task<LabOrderReadDto?> GetLabOrderByIdAsync(int id)
         {
             var labOrder = await _context.LabOrders
+                .Include(l => l.Patient)
                 .Include(l => l.Doctor)
                 .FirstOrDefaultAsync(l => l.Id == id);
 
@@ -38,6 +40,7 @@ namespace Sanalink.API.Services
         {
             return await _context.LabOrders
                 .Where(l => l.EncounterId == encounterId)
+                .Include(l => l.Patient)
                 .Include(l => l.Doctor)
                 .OrderByDescending(l => l.OrderedAt)
                 .Select(l => MapToReadDto(l))
@@ -48,6 +51,7 @@ namespace Sanalink.API.Services
         {
             return await _context.LabOrders
                 .Where(l => l.PatientId == patientId)
+                .Include(l => l.Patient)
                 .Include(l => l.Doctor)
                 .OrderByDescending(l => l.OrderedAt)
                 .Select(l => MapToReadDto(l))
@@ -73,6 +77,7 @@ namespace Sanalink.API.Services
             await _context.SaveChangesAsync();
 
             var created = await _context.LabOrders
+                .Include(l => l.Patient)
                 .Include(l => l.Doctor)
                 .FirstAsync(l => l.Id == labOrder.Id);
 
@@ -82,6 +87,7 @@ namespace Sanalink.API.Services
         public async Task<LabOrderReadDto?> UpdateLabOrderAsync(int id, LabOrderUpdateDto dto)
         {
             var labOrder = await _context.LabOrders
+                .Include(l => l.Patient)
                 .Include(l => l.Doctor)
                 .FirstOrDefaultAsync(l => l.Id == id);
 
@@ -134,6 +140,7 @@ namespace Sanalink.API.Services
                 Id = l.Id,
                 EncounterId = l.EncounterId,
                 PatientId = l.PatientId,
+                PatientName = l.Patient.FirstName + " " + l.Patient.LastName,
                 DoctorName = l.Doctor.FullName ?? l.Doctor.UserName!,
                 TestName = l.TestName,
                 TestCategory = l.TestCategory,

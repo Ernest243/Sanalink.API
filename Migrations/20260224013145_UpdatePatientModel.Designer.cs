@@ -12,8 +12,8 @@ using Sanalink.API.Data;
 namespace Sanalink.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260224002834_RemovePatientEntity")]
-    partial class RemovePatientEntity
+    [Migration("20260224013145_UpdatePatientModel")]
+    partial class UpdatePatientModel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -274,6 +274,8 @@ namespace Sanalink.API.Migrations
 
                     b.HasIndex("DoctorId");
 
+                    b.HasIndex("PatientId");
+
                     b.ToTable("Appointments");
                 });
 
@@ -384,6 +386,8 @@ namespace Sanalink.API.Migrations
 
                     b.HasIndex("NurseId");
 
+                    b.HasIndex("PatientId");
+
                     b.ToTable("Encounters");
                 });
 
@@ -489,6 +493,8 @@ namespace Sanalink.API.Migrations
 
                     b.HasIndex("EncounterId");
 
+                    b.HasIndex("PatientId");
+
                     b.ToTable("LabOrders");
                 });
 
@@ -519,7 +525,59 @@ namespace Sanalink.API.Migrations
 
                     b.HasIndex("DoctorId");
 
+                    b.HasIndex("PatientId");
+
                     b.ToTable("Notes");
+                });
+
+            modelBuilder.Entity("Sanalink.API.Models.Patient", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("MiddleName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FacilityId");
+
+                    b.ToTable("Patients");
                 });
 
             modelBuilder.Entity("Sanalink.API.Models.PharmacyDispense", b =>
@@ -572,6 +630,8 @@ namespace Sanalink.API.Migrations
 
                     b.HasIndex("DispensedById");
 
+                    b.HasIndex("PatientId");
+
                     b.HasIndex("PrescriptionId");
 
                     b.ToTable("PharmacyDispenses");
@@ -613,6 +673,8 @@ namespace Sanalink.API.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DoctorId");
+
+                    b.HasIndex("PatientId");
 
                     b.ToTable("Prescriptions");
                 });
@@ -686,7 +748,15 @@ namespace Sanalink.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Sanalink.API.Models.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("Sanalink.API.Models.AuditLog", b =>
@@ -712,9 +782,17 @@ namespace Sanalink.API.Migrations
                         .HasForeignKey("NurseId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Sanalink.API.Models.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Doctor");
 
                     b.Navigation("Nurse");
+
+                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("Sanalink.API.Models.LabOrder", b =>
@@ -731,9 +809,17 @@ namespace Sanalink.API.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Sanalink.API.Models.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Doctor");
 
                     b.Navigation("Encounter");
+
+                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("Sanalink.API.Models.Note", b =>
@@ -744,7 +830,26 @@ namespace Sanalink.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Sanalink.API.Models.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("Sanalink.API.Models.Patient", b =>
+                {
+                    b.HasOne("Sanalink.API.Models.Facility", "Facility")
+                        .WithMany()
+                        .HasForeignKey("FacilityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Facility");
                 });
 
             modelBuilder.Entity("Sanalink.API.Models.PharmacyDispense", b =>
@@ -755,6 +860,12 @@ namespace Sanalink.API.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Sanalink.API.Models.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Sanalink.API.Models.Prescription", "Prescription")
                         .WithMany()
                         .HasForeignKey("PrescriptionId")
@@ -762,6 +873,8 @@ namespace Sanalink.API.Migrations
                         .IsRequired();
 
                     b.Navigation("DispensedBy");
+
+                    b.Navigation("Patient");
 
                     b.Navigation("Prescription");
                 });
@@ -774,7 +887,15 @@ namespace Sanalink.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Sanalink.API.Models.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
                 });
 #pragma warning restore 612, 618
         }

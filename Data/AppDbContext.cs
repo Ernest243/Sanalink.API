@@ -9,6 +9,7 @@ namespace Sanalink.API.Data
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+        public DbSet<Patient> Patients { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Note> Notes { get; set; }
         public DbSet<Prescription> Prescriptions { get; set; }
@@ -61,6 +62,12 @@ namespace Sanalink.API.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<LabOrder>()
+                .HasOne(l => l.Patient)
+                .WithMany()
+                .HasForeignKey(l => l.PatientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<LabOrder>()
                 .HasOne(l => l.Doctor)
                 .WithMany()
                 .HasForeignKey(l => l.DoctorId)
@@ -71,6 +78,12 @@ namespace Sanalink.API.Data
                 .HasOne(d => d.Prescription)
                 .WithMany()
                 .HasForeignKey(d => d.PrescriptionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<PharmacyDispense>()
+                .HasOne(d => d.Patient)
+                .WithMany()
+                .HasForeignKey(d => d.PatientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<PharmacyDispense>()
