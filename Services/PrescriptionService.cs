@@ -17,6 +17,7 @@ namespace Sanalink.API.Services
         public async Task<IEnumerable<PrescriptionReadDto>> GetAllPrescriptionsAsync()
         {
             var prescriptions = await _context.Prescriptions
+                .Include(p => p.Patient)
                 .Include(p => p.Doctor)
                 .ToListAsync();
 
@@ -24,6 +25,7 @@ namespace Sanalink.API.Services
             {
                 Id = p.Id,
                 PatientId = p.PatientId,
+                PatientName = p.Patient.FirstName + " " + p.Patient.LastName,
                 DoctorName = p.Doctor.UserName!,
                 MedicationName = p.MedicationName,
                 Dosage = p.Dosage,

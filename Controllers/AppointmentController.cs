@@ -128,6 +128,7 @@ public class AppointmentController : ControllerBase
         var completed = appointments.Count(a => a.Status == "Completed");
         var cancelled = appointments.Count(a => a.Status == "Cancelled");
 
+        var totalPatients = await _db.Patients.CountAsync();
         var totalPrescriptions = await _db.Prescriptions.CountAsync();
 
         return Ok(new
@@ -136,6 +137,7 @@ public class AppointmentController : ControllerBase
             scheduled,
             completed,
             cancelled,
+            totalPatients,
             totalPrescriptions
         });
     }
