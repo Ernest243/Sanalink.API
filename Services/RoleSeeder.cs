@@ -40,7 +40,8 @@ public class RoleSeeder : IRoleSeeder
         {
             UserName = adminEmail,
             Email = adminEmail,
-            FullName = "System Admin",
+            FirstName = "System",
+            LastName = "Admin",
             Role = "Admin",
             EmailConfirmed = true,
             IsActive = true

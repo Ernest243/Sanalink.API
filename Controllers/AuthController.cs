@@ -48,7 +48,8 @@ public class AuthController : ControllerBase
         {
             UserName = dto.Email,
             Email = dto.Email,
-            FullName = dto.FullName,
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
             Role = dto.Role,
             Department = dto.Department,
             FacilityId = dto.FacilityId,
@@ -111,6 +112,8 @@ public class AuthController : ControllerBase
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
             new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
+            new Claim("firstName", user.FirstName ?? ""),
+            new Claim("lastName", user.LastName ?? ""),
             new Claim("role", user.Role ?? ""),
             new Claim("facilityId", user.FacilityId?.ToString() ?? "")
         };
