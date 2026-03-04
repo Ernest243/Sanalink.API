@@ -32,7 +32,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVercel", policy =>
     {
-        policy.WithOrigins("https://sanalink-ui.vercel.app", "http://localhost:5173")
+        policy.WithOrigins("https://sanalink-ui.vercel.app")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+
+    options.AddPolicy("AllowLocalhost", policy =>
+    {
+        policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -120,7 +127,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseCors("AllowVercel");
+app.UseCors(app.Environment.IsDevelopment() ? "AllowLocalhost" : "AllowVercel");
 app.UseAuthentication();
 app.UseMiddleware<AuditLoggingMiddleware>();
 app.UseAuthorization();
