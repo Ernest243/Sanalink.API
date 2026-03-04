@@ -5,7 +5,10 @@ namespace Sanalink.API.Models
     public class StaffRegisterDto
     {
         [Required]
-        public string FullName { get; set; } = default!;
+        public string FirstName { get; set; } = default!;
+
+        [Required]
+        public string LastName { get; set; } = default!;
 
         [Required]
         [EmailAddress]

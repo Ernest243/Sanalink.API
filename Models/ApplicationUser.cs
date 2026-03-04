@@ -5,7 +5,10 @@ namespace Sanalink.API.Models
 {
     public class ApplicationUser : IdentityUser
     {
-        public string? FullName { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        [NotMapped]
+        public string FullName => $"{FirstName} {LastName}".Trim();
         public string? Role { get; set; } // Doctor, Nurse, Admin
         public string? Department { get; set; } // e.g., Cardiology, Pediatrics
         public DateTime CreateAt { get; set; } = DateTime.Now;
