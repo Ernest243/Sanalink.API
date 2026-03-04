@@ -10,29 +10,39 @@ namespace Sanalink.API.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "FullName",
-                table: "AspNetUsers",
-                newName: "LastName");
-
             migrationBuilder.AddColumn<string>(
                 name: "FirstName",
                 table: "AspNetUsers",
                 type: "text",
                 nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "LastName",
+                table: "AspNetUsers",
+                type: "text",
+                nullable: true);
+
+            migrationBuilder.DropColumn(
+                name: "FullName",
+                table: "AspNetUsers");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AddColumn<string>(
+                name: "FullName",
+                table: "AspNetUsers",
+                type: "text",
+                nullable: true);
+
             migrationBuilder.DropColumn(
                 name: "FirstName",
                 table: "AspNetUsers");
 
-            migrationBuilder.RenameColumn(
+            migrationBuilder.DropColumn(
                 name: "LastName",
-                table: "AspNetUsers",
-                newName: "FullName");
+                table: "AspNetUsers");
         }
     }
 }
