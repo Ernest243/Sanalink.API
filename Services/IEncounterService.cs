@@ -4,7 +4,7 @@ namespace Sanalink.API.Services
 {
     public interface IEncounterService
     {
-        Task<IEnumerable<EncounterReadDto>> GetAllEncountersAsync();
+        Task<IEnumerable<EncounterReadDto>> GetAllEncountersAsync(string? status = null);
         Task<EncounterReadDto?> GetEncounterByIdAsync(int id);
         Task<IEnumerable<EncounterReadDto>> GetEncountersByPatientAsync(int patientId);
         Task<EncounterReadDto> CreateEncounterAsync(EncounterCreateDto dto, string doctorId);
