@@ -22,6 +22,7 @@ namespace Sanalink.API.Services
                 .Select(n => new NoteReadDto
                 {
                     Id = n.Id,
+                    PatientId = n.PatientId,
                     Content = n.Content,
                     CreatedAt = n.CreatedAt,
                     DoctorName = n.Doctor.FullName!
@@ -44,6 +45,7 @@ namespace Sanalink.API.Services
             return new NoteReadDto
             {
                 Id = note.Id,
+                PatientId = note.PatientId,
                 Content = note.Content,
                 CreatedAt = note.CreatedAt,
                 DoctorName = (await _context.Users.FindAsync(doctorId))?.FullName ?? "Unknown"
