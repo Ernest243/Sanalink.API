@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Sanalink.API.Data;
+using Sanalink.API.DTOs;
 using Sanalink.API.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -64,6 +65,30 @@ public class AuthController : ControllerBase
         await _userManager.AddToRoleAsync(user, dto.Role);
 
         return Ok("Registration successful");
+    }
+
+    [HttpGet("staff")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetAllStaff()
+    {
+        var users = await _userManager.Users
+            .OrderBy(u => u.LastName)
+            .ThenBy(u => u.FirstName)
+            .Select(u => new StaffReadDto
+            {
+                Id = u.Id,
+                Email = u.Email ?? "",
+                FirstName = u.FirstName ?? "",
+                LastName = u.LastName ?? "",
+                Role = u.Role,
+                Department = u.Department,
+                FacilityId = u.FacilityId,
+                IsActive = u.IsActive,
+                CreatedAt = u.CreateAt
+            })
+            .ToListAsync();
+
+        return Ok(users);
     }
 
     [HttpPost("login")]
