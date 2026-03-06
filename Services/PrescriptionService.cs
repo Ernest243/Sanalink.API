@@ -41,6 +41,7 @@ namespace Sanalink.API.Services
                 .Select(p => new PrescriptionReadDto
                 {
                     Id = p.Id,
+                    PatientId = p.PatientId,
                     MedicationName = p.MedicationName,
                     Dosage = p.Dosage,
                     Instructions = p.Instructions,
