@@ -170,11 +170,11 @@ public class PatientController : ControllerBase
         return Ok(count);
     }
 
-    [HttpGet("registrations/last7days")]
+    [HttpGet("registrations")]
     [Authorize(Roles = "Admin,Doctor,Nurse,DAF,Accueil")]
-    public async Task<IActionResult> GetRegistrationsLast7Days()
+    public async Task<IActionResult> GetRegistrations([FromQuery] int days = 7)
     {
-        var since = DateTime.UtcNow.AddDays(-6).Date;
+        var since = DateTime.UtcNow.AddDays(-(days - 1)).Date;
 
         var data = await _db.Patients
             .Where(p => p.CreatedAt >= since)
@@ -182,14 +182,11 @@ public class PatientController : ControllerBase
             .Select(g => new { Date = g.Key, Count = g.Count() })
             .ToListAsync();
 
-        var result = Enumerable.Range(0, 7)
-            .Select(i => since.AddDays(i))
-            .Select(date => new
-            {
-                date = date.ToString("yyyy-MM-dd"),
-                count = data.FirstOrDefault(d => d.Date == date)?.Count ?? 0
-            });
-
-        return Ok(result);
+        var allDates = Enumerable.Range(0, days).Select(i => since.AddDays(i)).ToList();
+        return Ok(new
+        {
+            dates = allDates.Select(d => d.ToString("dd/MM")),
+            counts = allDates.Select(d => data.FirstOrDefault(x => x.Date == d)?.Count ?? 0)
+        });
     }
 }
