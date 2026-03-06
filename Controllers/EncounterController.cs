@@ -18,6 +18,21 @@ namespace Sanalink.API.Controllers
             _encounterService = encounterService;
         }
 
+        [HttpGet("analytics")]
+        [Authorize(Roles = "Doctor,Nurse,Admin,Accueil")]
+        public async Task<IActionResult> GetEncounterAnalytics()
+        {
+            var encounters = await _encounterService.GetAllEncountersAsync();
+            var list = encounters.ToList();
+            return Ok(new
+            {
+                total = list.Count,
+                open = list.Count(e => e.Status == "Open"),
+                inProgress = list.Count(e => e.Status == "InProgress"),
+                closed = list.Count(e => e.Status == "Closed"),
+            });
+        }
+
         [HttpGet]
         [Authorize(Roles = "Doctor,Nurse,Admin,Accueil")]
         public async Task<IActionResult> GetAllEncounters([FromQuery] string? status = null)
