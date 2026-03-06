@@ -14,12 +14,18 @@ namespace Sanalink.API.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<EncounterReadDto>> GetAllEncountersAsync()
+        public async Task<IEnumerable<EncounterReadDto>> GetAllEncountersAsync(string? status = null)
         {
-            return await _context.Encounters
+            var query = _context.Encounters
                 .Include(e => e.Patient)
                 .Include(e => e.Doctor)
                 .Include(e => e.Nurse)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(status))
+                query = query.Where(e => e.Status == status);
+
+            return await query
                 .OrderByDescending(e => e.CreatedAt)
                 .Select(e => MapToReadDto(e))
                 .ToListAsync();

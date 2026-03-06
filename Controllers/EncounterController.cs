@@ -20,9 +20,9 @@ namespace Sanalink.API.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Doctor,Nurse,Admin,Accueil")]
-        public async Task<IActionResult> GetAllEncounters()
+        public async Task<IActionResult> GetAllEncounters([FromQuery] string? status = null)
         {
-            var encounters = await _encounterService.GetAllEncountersAsync();
+            var encounters = await _encounterService.GetAllEncountersAsync(status);
             return Ok(encounters);
         }
 
@@ -65,10 +65,10 @@ namespace Sanalink.API.Controllers
         }
 
         [HttpPut("{id}/status")]
-        [Authorize(Roles = "Doctor")]
-        public async Task<IActionResult> UpdateStatus(int id, [FromBody] string newStatus)
+        [Authorize(Roles = "Doctor,Nurse")]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] StatusUpdateDto dto)
         {
-            var success = await _encounterService.UpdateStatusAsync(id, newStatus);
+            var success = await _encounterService.UpdateStatusAsync(id, dto.Status);
             if (!success) return BadRequest("Invalid status transition.");
             return Ok();
         }
