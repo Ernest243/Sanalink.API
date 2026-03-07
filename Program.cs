@@ -32,7 +32,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVercel", policy =>
     {
-        policy.WithOrigins("https://sanalink-ui.vercel.app")
+        policy.SetIsOriginAllowed(origin =>
+            new Uri(origin).Host.EndsWith(".vercel.app"))
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -149,4 +150,4 @@ using (var scope = app.Services.CreateScope())
     await seeder.SeedAdminUserAsync();
 }
 
-app.Run();
+await app.RunAsync();
