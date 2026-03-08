@@ -13,6 +13,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Capture Current Live Deploy (for rollback)
+        id: current
+        run: |
+          SERVICE_ID="srv-d6lneu75gffc73b0avk0"
+          RESPONSE=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Accept: application/json" \
+            "https://api.render.com/v1/services/$SERVICE_ID/deploys?limit=1")
+          LIVE_DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.[0].deploy.id // ""')
+          echo "Current live deploy ID: $LIVE_DEPLOY_ID"
+          echo "live_deploy_id=$LIVE_DEPLOY_ID" >> $GITHUB_OUTPUT
+
       - name: Trigger Render Deployment
         id: trigger
         run: |
@@ -20,10 +32,11 @@ jobs:
           RESPONSE=$(curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}")
           echo "Response: $RESPONSE"
           DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.deploy.id')
-          echo "Deploy ID: $DEPLOY_ID"
+          echo "New deploy ID: $DEPLOY_ID"
           echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
 
       - name: Wait for Deployment to Complete
+        id: wait
         run: |
           DEPLOY_ID="${{ steps.trigger.outputs.deploy_id }}"
           SERVICE_ID="srv-d6lneu75gffc73b0avk0"
@@ -37,17 +50,18 @@ jobs:
               -H "Accept: application/json" \
               "https://api.render.com/v1/services/$SERVICE_ID/deploys/$DEPLOY_ID")
 
-            echo "Raw response: $RESPONSE"
             STATUS=$(echo "$RESPONSE" | jq -r '.status // "unknown"')
             echo "Attempt $i: Deploy status = $STATUS"
 
             case "$STATUS" in
               live)
                 echo "Deployment is live!"
+                echo "result=success" >> $GITHUB_OUTPUT
                 exit 0
                 ;;
               build_failed|update_failed|canceled|pre_deploy_failed)
                 echo "Deployment failed with status: $STATUS"
+                echo "result=failed" >> $GITHUB_OUTPUT
                 exit 1
                 ;;
             esac
@@ -56,5 +70,53 @@ jobs:
             sleep $SLEEP_SECONDS
           done
 
-          echo "Timed out waiting for deployment after $((MAX_RETRIES * SLEEP_SECONDS / 60)) minutes."
+          echo "Timed out waiting for deployment."
+          echo "result=failed" >> $GITHUB_OUTPUT
+          exit 1
+
+      - name: Rollback to Previous Deploy
+        if: failure() && steps.current.outputs.live_deploy_id != ''
+        run: |
+          SERVICE_ID="srv-d6lneu75gffc73b0avk0"
+          ROLLBACK_ID="${{ steps.current.outputs.live_deploy_id }}"
+          echo "Deployment failed. Rolling back to deploy: $ROLLBACK_ID"
+
+          RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/json" \
+            "https://api.render.com/v1/services/$SERVICE_ID/deploys" \
+            -d "{\"clearCache\": \"do_not_clear\"}")
+
+          echo "Rollback response: $RESPONSE"
+          ROLLBACK_DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id // ""')
+
+          echo "Waiting for rollback to complete..."
+          MAX_RETRIES=40
+          SLEEP_SECONDS=30
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            STATUS=$(curl -s \
+              -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+              -H "Accept: application/json" \
+              "https://api.render.com/v1/services/$SERVICE_ID/deploys/$ROLLBACK_DEPLOY_ID" \
+              | jq -r '.status // "unknown"')
+
+            echo "Rollback attempt $i: status = $STATUS"
+
+            case "$STATUS" in
+              live)
+                echo "Rollback successful. Previous version is live."
+                exit 0
+                ;;
+              build_failed|update_failed|canceled|pre_deploy_failed)
+                echo "Rollback also failed with status: $STATUS"
+                exit 1
+                ;;
+            esac
+
+            sleep $SLEEP_SECONDS
+          done
+
+          echo "Rollback timed out."
           exit 1
