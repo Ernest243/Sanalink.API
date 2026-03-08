@@ -14,27 +14,45 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Trigger Render Deployment
+        id: trigger
         run: |
-          echo "🚀 Triggering Render deployment..."
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          echo "Triggering Render deployment..."
+          RESPONSE=$(curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}")
+          echo "Response: $RESPONSE"
+          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.deploy.id')
+          echo "Deploy ID: $DEPLOY_ID"
+          echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
 
-      - name: Wait for App to Become Healthy
+      - name: Wait for Deployment to Complete
         run: |
-          echo "⏳ Waiting for service to become healthy at /health..."
-          MAX_RETRIES=50
+          DEPLOY_ID="${{ steps.trigger.outputs.deploy_id }}"
+          echo "Polling deployment status for: $DEPLOY_ID"
+          MAX_RETRIES=40
           SLEEP_SECONDS=30
-          URL="https://sanalink-api.onrender.com/api/v1/Health"
 
           for i in $(seq 1 $MAX_RETRIES); do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
-            echo "Attempt $i: Status $STATUS"
-            if [ "$STATUS" -eq 200 ]; then
-              echo "✅ Service is live and healthy!"
-              exit 0
-            fi
-            echo "Waiting ${SLEEP_SECONDS}s before retrying..."
+            RESPONSE=$(curl -s \
+              -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+              -H "Accept: application/json" \
+              "https://api.render.com/v1/deploys/$DEPLOY_ID")
+
+            STATUS=$(echo "$RESPONSE" | jq -r '.status')
+            echo "Attempt $i: Deploy status = $STATUS"
+
+            case "$STATUS" in
+              live)
+                echo "Deployment is live!"
+                exit 0
+                ;;
+              build_failed|update_failed|canceled|pre_deploy_failed)
+                echo "Deployment failed with status: $STATUS"
+                exit 1
+                ;;
+            esac
+
+            echo "Waiting ${SLEEP_SECONDS}s..."
             sleep $SLEEP_SECONDS
           done
 
-          echo "❌ Service did not become healthy after $((MAX_RETRIES * SLEEP_SECONDS / 60)) minutes."
+          echo "Timed out waiting for deployment after $((MAX_RETRIES * SLEEP_SECONDS / 60)) minutes."
           exit 1
