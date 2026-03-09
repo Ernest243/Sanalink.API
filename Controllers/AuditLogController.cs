@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sanalink.API.DTOs;
 using Sanalink.API.Services;
 
 namespace Sanalink.API.Controllers
@@ -21,6 +22,13 @@ namespace Sanalink.API.Controllers
         {
             var logs = await _auditLogService.GetAllLogsAsync();
             return Ok(logs);
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] AuditLogQueryDto query)
+        {
+            var result = await _auditLogService.QueryLogsAsync(query);
+            return Ok(result);
         }
 
         [HttpGet("user/{userId}")]
