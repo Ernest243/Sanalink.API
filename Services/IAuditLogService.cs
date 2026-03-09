@@ -6,5 +6,6 @@ namespace Sanalink.API.Services
     {
         Task<List<AuditLogReadDto>> GetAllLogsAsync();
         Task<List<AuditLogReadDto>> GetLogsByUserAsync(string userId);
+        Task<PagedResult<AuditLogReadDto>> QueryLogsAsync(AuditLogQueryDto query);
     }
 }
