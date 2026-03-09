@@ -51,3 +51,4 @@ desktop.ini
 !*.json
 !*.md
 !*.xml
+appsettings.Development.json
