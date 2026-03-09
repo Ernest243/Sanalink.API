@@ -14,6 +14,13 @@ namespace Sanalink.API.Middleware
             "POST", "PUT", "PATCH", "DELETE", "GET"
         };
 
+        // Paths where request/response bodies are never stored (contain credentials)
+        private static readonly HashSet<string> SkipBodyPaths = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "/api/v1/auth/login",
+            "/api/v1/auth/register-staff"
+        };
+
         public AuditLoggingMiddleware(RequestDelegate next)
         {
             _next = next;
@@ -74,17 +81,22 @@ namespace Sanalink.API.Middleware
                 _        => context.Request.Method.ToUpper()
             };
 
-            // Capture old/new values for mutations
+            // Capture and mask old/new values for mutations
+            // Skip body capture entirely for auth endpoints (contain credentials)
+            var skipBody = SkipBodyPaths.Contains(context.Request.Path.Value ?? "");
             string? oldValue = null;
             string? newValue = null;
-            if (action is "UPDATE" or "DELETE")
+            if (!skipBody)
             {
-                oldValue = string.IsNullOrWhiteSpace(requestBody) ? null : requestBody;
-                newValue = string.IsNullOrWhiteSpace(responseBody) ? null : responseBody;
-            }
-            else if (action == "CREATE")
-            {
-                newValue = string.IsNullOrWhiteSpace(responseBody) ? null : responseBody;
+                if (action is "UPDATE" or "DELETE")
+                {
+                    oldValue = SensitiveDataMasker.Mask(requestBody);
+                    newValue = SensitiveDataMasker.Mask(responseBody);
+                }
+                else if (action == "CREATE")
+                {
+                    newValue = SensitiveDataMasker.Mask(responseBody);
+                }
             }
 
             var userAgent = context.Request.Headers.UserAgent.ToString();
