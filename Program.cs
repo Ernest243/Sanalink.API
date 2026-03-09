@@ -8,9 +8,28 @@ using Sanalink.API.Models;
 using Sanalink.API.Services;
 using Sanalink.API.Middleware;
 using Microsoft.OpenApi.Models;
+using Serilog;
 
 // STEP 1: Load config correctly BEFORE using it
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, services, config) =>
+{
+    var betterStackToken = context.Configuration["BetterStack:SourceToken"];
+
+    config.ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.File(
+            path: "logs/sanalink-.log",
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 14
+        );
+
+    if (!string.IsNullOrWhiteSpace(betterStackToken))
+        config.WriteTo.BetterStack(sourceToken: betterStackToken);
+});
 
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
@@ -53,8 +72,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 
-Console.WriteLine($"Current Environment: {builder.Environment.EnvironmentName}");
-Console.WriteLine($"Connection string: {connectionString}");
+Log.Information("Current Environment: {Environment}", builder.Environment.EnvironmentName);
+Log.Information("Connection string configured for: {Database}", connectionString?.Split(';').FirstOrDefault());
 
 // STEP 4: Add Identity and Auth
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -132,6 +151,7 @@ app.UseCors(app.Environment.IsDevelopment() ? "AllowLocalhost" : "AllowVercel");
 app.UseAuthentication();
 app.UseMiddleware<AuditLoggingMiddleware>();
 app.UseAuthorization();
+app.UseSerilogRequestLogging();
 app.MapControllers();
 
 // STEP 6: Apply migrations in production only
