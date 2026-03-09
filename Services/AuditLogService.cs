@@ -36,15 +36,21 @@ namespace Sanalink.API.Services
         {
             return new AuditLogReadDto
             {
-                Id = a.Id,
-                UserId = a.UserId,
-                UserName = a.User != null ? a.User.FullName ?? a.User.UserName : null,
-                Action = a.Action,
-                Endpoint = a.Endpoint,
-                RequestBody = a.RequestBody,
+                Id         = a.Id,
+                UserId     = a.UserId,
+                UserName   = a.User != null ? a.User.FullName ?? a.User.UserName : null,
+                UserEmail  = a.UserEmail,
+                UserRole   = a.UserRole,
+                FacilityId = a.FacilityId,
+                Action     = a.Action,
+                Resource   = a.Resource,
+                ResourceId = a.ResourceId,
+                Endpoint   = a.Endpoint,
+                OldValue   = a.OldValue,
+                NewValue   = a.NewValue,
                 StatusCode = a.StatusCode,
-                IpAddress = a.IpAddress,
-                Timestamp = a.Timestamp
+                IpAddress  = a.IpAddress,
+                Timestamp  = a.Timestamp
             };
         }
     }

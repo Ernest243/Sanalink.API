@@ -12,15 +12,32 @@ namespace Sanalink.API.Models
         [ForeignKey("UserId")]
         public ApplicationUser? User { get; set; }
 
+        [MaxLength(256)]
+        public string? UserEmail { get; set; }
+
+        [MaxLength(50)]
+        public string? UserRole { get; set; }
+
+        [MaxLength(50)]
+        public string? FacilityId { get; set; }
+
         [Required]
-        [MaxLength(10)]
+        [MaxLength(20)]
         public string Action { get; set; } = default!;
+
+        [MaxLength(100)]
+        public string? Resource { get; set; }
+
+        [MaxLength(50)]
+        public string? ResourceId { get; set; }
 
         [Required]
         [MaxLength(500)]
         public string Endpoint { get; set; } = default!;
 
-        public string? RequestBody { get; set; }
+        public string? OldValue { get; set; }
+
+        public string? NewValue { get; set; }
 
         public int StatusCode { get; set; }
 
