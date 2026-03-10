@@ -25,7 +25,24 @@ public class AppointmentController : ControllerBase
     {
         var appointments = await _db.Appointments
             .Include(a => a.Doctor)
+            .Include(a => a.Patient)
             .OrderByDescending(a => a.Date)
+            .Select(a => new AppointmentReadDto
+            {
+                Id = a.Id,
+                PatientId = a.PatientId,
+                PatientName = a.Patient != null
+                    ? (a.Patient.FirstName + " " + a.Patient.LastName).Trim()
+                    : "",
+                DoctorId = a.DoctorId,
+                DoctorName = a.Doctor != null
+                    ? (a.Doctor.FirstName + " " + a.Doctor.LastName).Trim()
+                    : "",
+                Date = a.Date,
+                Reason = a.Reason,
+                Status = a.Status,
+                CreatedAt = a.CreateAt
+            })
             .ToListAsync();
 
         return Ok(appointments);
@@ -35,11 +52,29 @@ public class AppointmentController : ControllerBase
     [Authorize(Roles = "Doctor,Nurse,Admin,Accueil")]
     public async Task<IActionResult> GetById(int id)
     {
-        var appt = await _db.Appointments
+        var a = await _db.Appointments
             .Include(a => a.Doctor)
+            .Include(a => a.Patient)
             .FirstOrDefaultAsync(a => a.Id == id);
 
-        return appt is null ? NotFound() : Ok(appt);
+        if (a is null) return NotFound();
+
+        return Ok(new AppointmentReadDto
+        {
+            Id = a.Id,
+            PatientId = a.PatientId,
+            PatientName = a.Patient != null
+                ? (a.Patient.FirstName + " " + a.Patient.LastName).Trim()
+                : "",
+            DoctorId = a.DoctorId,
+            DoctorName = a.Doctor != null
+                ? (a.Doctor.FirstName + " " + a.Doctor.LastName).Trim()
+                : "",
+            Date = a.Date,
+            Reason = a.Reason,
+            Status = a.Status,
+            CreatedAt = a.CreateAt
+        });
     }
 
     [HttpPost]
@@ -59,7 +94,26 @@ public class AppointmentController : ControllerBase
         _db.Appointments.Add(appointment);
         await _db.SaveChangesAsync();
 
-        return Ok(appointment);
+        // Return DTO with resolved names
+        var doctor = await _db.Users.FindAsync(appointment.DoctorId);
+        var patient = await _db.Patients.FindAsync(appointment.PatientId);
+
+        return Ok(new AppointmentReadDto
+        {
+            Id = appointment.Id,
+            PatientId = appointment.PatientId,
+            PatientName = patient != null
+                ? (patient.FirstName + " " + patient.LastName).Trim()
+                : "",
+            DoctorId = appointment.DoctorId,
+            DoctorName = doctor != null
+                ? (doctor.FirstName + " " + doctor.LastName).Trim()
+                : "",
+            Date = appointment.Date,
+            Reason = appointment.Reason,
+            Status = appointment.Status,
+            CreatedAt = appointment.CreateAt
+        });
     }
 
     [HttpPut("{id}")]
