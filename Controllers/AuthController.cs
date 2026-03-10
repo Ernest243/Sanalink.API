@@ -106,6 +106,35 @@ public class AuthController : ControllerBase
         return Ok(new { token });
     }
 
+    [HttpGet("doctors")]
+    [Authorize]
+    public async Task<IActionResult> GetDoctors()
+    {
+        var facilityIdClaim = User.FindFirstValue("facilityId");
+        int.TryParse(facilityIdClaim, out int facilityId);
+
+        var query = _userManager.Users
+            .Where(u => u.Role == "Doctor" && u.IsActive)
+            .OrderBy(u => u.LastName)
+            .ThenBy(u => u.FirstName);
+
+        var doctors = await query
+            .Select(u => new { u.Id, u.FirstName, u.LastName, u.Department, u.FacilityId })
+            .ToListAsync();
+
+        if (facilityId > 0)
+            doctors = doctors.Where(d => d.FacilityId == facilityId).ToList();
+
+        return Ok(doctors.Select(d => new
+        {
+            d.Id,
+            d.FirstName,
+            d.LastName,
+            d.Department,
+            fullName = (d.FirstName + " " + d.LastName).Trim()
+        }));
+    }
+
     [HttpGet("active-staff-count")]
     [Authorize(Roles = "Admin,Doctor,Nurse,DAF")]
     public async Task<IActionResult> GetActiveStaffCount()
