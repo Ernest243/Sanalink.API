@@ -117,15 +117,16 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Doctor,Accueil")]
-    public async Task<IActionResult> Update(int id, Appointment update)
+    [Authorize(Roles = "Doctor,Accueil,Admin")]
+    public async Task<IActionResult> Update(int id, [FromBody] AppointmentUpdateDto dto)
     {
         var appt = await _db.Appointments.FindAsync(id);
         if (appt is null) return NotFound();
 
-        appt.Date = update.Date;
-        appt.Reason = update.Reason;
-        appt.Status = update.Status;
+        appt.Date = dto.Date;
+        appt.Reason = dto.Reason;
+        if (!string.IsNullOrWhiteSpace(dto.Status))
+            appt.Status = dto.Status;
 
         await _db.SaveChangesAsync();
         return NoContent();
