@@ -30,15 +30,15 @@ namespace Sanalink.API.Controllers
 
             var data = await _db.Prescriptions
                 .Where(p => p.CreatedAt >= since)
-                .GroupBy(p => p.CreatedAt.Date)
-                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .GroupBy(p => new { p.CreatedAt.Year, p.CreatedAt.Month, p.CreatedAt.Day })
+                .Select(g => new { g.Key.Year, g.Key.Month, g.Key.Day, Count = g.Count() })
                 .ToListAsync();
 
             var allDates = Enumerable.Range(0, days).Select(i => since.AddDays(i)).ToList();
             return Ok(new
             {
                 dates = allDates.Select(d => d.ToString("dd/MM")),
-                counts = allDates.Select(d => data.FirstOrDefault(x => x.Date == d)?.Count ?? 0)
+                counts = allDates.Select(d => data.FirstOrDefault(x => x.Year == d.Year && x.Month == d.Month && x.Day == d.Day)?.Count ?? 0)
             });
         }
 
