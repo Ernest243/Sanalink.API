@@ -178,15 +178,76 @@ public class PatientController : ControllerBase
 
         var data = await _db.Patients
             .Where(p => p.CreatedAt >= since)
-            .GroupBy(p => p.CreatedAt.Date)
-            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .GroupBy(p => new { p.CreatedAt.Year, p.CreatedAt.Month, p.CreatedAt.Day })
+            .Select(g => new { g.Key.Year, g.Key.Month, g.Key.Day, Count = g.Count() })
             .ToListAsync();
 
         var allDates = Enumerable.Range(0, days).Select(i => since.AddDays(i)).ToList();
         return Ok(new
         {
             dates = allDates.Select(d => d.ToString("dd/MM")),
-            counts = allDates.Select(d => data.FirstOrDefault(x => x.Date == d)?.Count ?? 0)
+            counts = allDates.Select(d => data.FirstOrDefault(x => x.Year == d.Year && x.Month == d.Month && x.Day == d.Day)?.Count ?? 0)
+        });
+    }
+
+    [HttpGet("gender-distribution")]
+    [Authorize(Roles = "Admin,DAF")]
+    public async Task<IActionResult> GetGenderDistribution()
+    {
+        var data = await _db.Patients
+            .GroupBy(p => p.Gender.ToLower())
+            .Select(g => new { Gender = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        return Ok(new
+        {
+            male = data.FirstOrDefault(g => g.Gender == "male" || g.Gender == "homme" || g.Gender == "m")?.Count ?? 0,
+            female = data.FirstOrDefault(g => g.Gender == "female" || g.Gender == "femme" || g.Gender == "f")?.Count ?? 0,
+            other = data.Where(g => g.Gender != "male" && g.Gender != "homme" && g.Gender != "m"
+                                 && g.Gender != "female" && g.Gender != "femme" && g.Gender != "f")
+                        .Sum(g => g.Count)
+        });
+    }
+
+    [HttpGet("per-facility")]
+    [Authorize(Roles = "Admin,DAF")]
+    public async Task<IActionResult> GetPatientPerFacility()
+    {
+        var data = await _db.Patients
+            .GroupBy(p => p.FacilityId)
+            .Select(g => new { FacilityId = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        var facilities = await _db.Facilities.ToListAsync();
+
+        var result = data.Select(d => new
+        {
+            facilityId = d.FacilityId,
+            facilityName = facilities.FirstOrDefault(f => f.Id == d.FacilityId)?.Name ?? $"Établissement {d.FacilityId}",
+            patientCount = d.Count
+        }).ToList();
+
+        return Ok(result);
+    }
+
+    [HttpGet("natality")]
+    [Authorize(Roles = "Admin,DAF")]
+    public async Task<IActionResult> GetNatality([FromQuery] int days = 30)
+    {
+        var since = DateTime.UtcNow.AddDays(-(days - 1)).Date;
+        var cutoff = DateTime.UtcNow.AddDays(-30);
+
+        var data = await _db.Patients
+            .Where(p => p.CreatedAt >= since && p.DateOfBirth >= cutoff)
+            .GroupBy(p => new { p.CreatedAt.Year, p.CreatedAt.Month, p.CreatedAt.Day })
+            .Select(g => new { g.Key.Year, g.Key.Month, g.Key.Day, Count = g.Count() })
+            .ToListAsync();
+
+        var allDates = Enumerable.Range(0, days).Select(i => since.AddDays(i)).ToList();
+        return Ok(new
+        {
+            dates = allDates.Select(d => d.ToString("dd/MM")),
+            counts = allDates.Select(d => data.FirstOrDefault(x => x.Year == d.Year && x.Month == d.Month && x.Day == d.Day)?.Count ?? 0)
         });
     }
 }
