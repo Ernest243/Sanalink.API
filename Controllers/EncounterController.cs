@@ -92,12 +92,27 @@ namespace Sanalink.API.Controllers
             return Ok();
         }
 
+        [HttpGet("debug-diagnoses")]
+        [Authorize(Roles = "Admin,DAF")]
+        public async Task<IActionResult> DebugDiagnoses()
+        {
+            var total = await _db.Encounters.CountAsync();
+            var sample = await _db.Encounters
+                .Take(5)
+                .Select(e => new { e.Id, e.Diagnosis, e.CreatedAt })
+                .ToListAsync();
+            var withDiagnosis = await _db.Encounters
+                .Where(e => e.Diagnosis != null && e.Diagnosis != "")
+                .CountAsync();
+            return Ok(new { total, withDiagnosis, sample });
+        }
+
         [HttpGet("top-diagnoses")]
         [Authorize(Roles = "Admin,DAF")]
         public async Task<IActionResult> GetTopDiagnoses([FromQuery] int limit = 10)
         {
             var data = await _db.Encounters
-                .Where(e => !string.IsNullOrEmpty(e.Diagnosis))
+                .Where(e => e.Diagnosis != null && e.Diagnosis != "")
                 .GroupBy(e => e.Diagnosis!)
                 .Select(g => new { Diagnosis = g.Key, Count = g.Count() })
                 .OrderByDescending(g => g.Count)
@@ -124,7 +139,7 @@ namespace Sanalink.API.Controllers
             };
 
             var encounters = await _db.Encounters
-                .Where(e => !string.IsNullOrEmpty(e.Diagnosis) && e.CreatedAt >= since)
+                .Where(e => e.Diagnosis != null && e.Diagnosis != "" && e.CreatedAt >= since)
                 .Select(e => e.Diagnosis!.ToLower())
                 .ToListAsync();
 
