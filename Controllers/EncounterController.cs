@@ -92,19 +92,25 @@ namespace Sanalink.API.Controllers
             return Ok();
         }
 
-        [HttpGet("debug-diagnoses")]
-        [Authorize(Roles = "Admin,DAF")]
-        public async Task<IActionResult> DebugDiagnoses()
+        [HttpPost("seed-analytics")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> SeedAnalytics()
         {
-            var total = await _db.Encounters.CountAsync();
-            var sample = await _db.Encounters
-                .Take(5)
-                .Select(e => new { e.Id, e.Diagnosis, e.CreatedAt })
-                .ToListAsync();
-            var withDiagnosis = await _db.Encounters
-                .Where(e => e.Diagnosis != null && e.Diagnosis != "")
-                .CountAsync();
-            return Ok(new { total, withDiagnosis, sample });
+            var diagnoses = new[]
+            {
+                "Paludisme", "Hypertension", "Diabète", "Tuberculose", "Asthme",
+                "Grippe", "VIH/SIDA", "Diarrhée aiguë", "Anémie", "Infection urinaire"
+            };
+
+            var encounters = await _db.Encounters.ToListAsync();
+            for (int i = 0; i < encounters.Count; i++)
+            {
+                encounters[i].Diagnosis = diagnoses[i % diagnoses.Length];
+                encounters[i].CreatedAt = DateTime.UtcNow.AddDays(-(i % 90));
+            }
+
+            await _db.SaveChangesAsync();
+            return Ok(new { updated = encounters.Count });
         }
 
         [HttpGet("top-diagnoses")]
