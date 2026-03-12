@@ -190,6 +190,37 @@ public class PatientController : ControllerBase
         });
     }
 
+    [HttpPost("seed-analytics")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> SeedAnalytics()
+    {
+        var patients = await _db.Patients.ToListAsync();
+
+        for (int i = 0; i < patients.Count; i++)
+        {
+            if (i < 20)
+            {
+                // Newborns — DateOfBirth and CreatedAt within last 25 days
+                patients[i].DateOfBirth = DateTime.UtcNow.AddDays(-(i % 25));
+                patients[i].CreatedAt = DateTime.UtcNow.AddDays(-(i % 25));
+            }
+            else if (i < 70)
+            {
+                // Pediatric — under 5 years old
+                patients[i].DateOfBirth = DateTime.UtcNow.AddYears(-((i % 5) + 1));
+                patients[i].CreatedAt = DateTime.UtcNow.AddDays(-((i % 90) + 1));
+            }
+            else
+            {
+                // Rest — spread registrations across last 90 days
+                patients[i].CreatedAt = DateTime.UtcNow.AddDays(-(i % 90));
+            }
+        }
+
+        await _db.SaveChangesAsync();
+        return Ok(new { updated = patients.Count });
+    }
+
     [HttpGet("gender-distribution")]
     [Authorize(Roles = "Admin,DAF")]
     public async Task<IActionResult> GetGenderDistribution()
