@@ -49,5 +49,8 @@ namespace Sanalink.API.Models
         public DateTime? UpdatedAt { get; set; }
 
         public DateTime? ClosedAt { get; set; }
+
+        /// <summary>ICD-10 coded diagnoses — populated when ICD10 feature flag is on.</summary>
+        public ICollection<EncounterDiagnosis>? Diagnoses { get; set; }
     }
 }
