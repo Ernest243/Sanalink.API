@@ -19,9 +19,26 @@ namespace Sanalink.API.Data
         public DbSet<LabOrder> LabOrders { get; set; }
         public DbSet<PharmacyDispense> PharmacyDispenses { get; set; }
 
+        // Compliance tables — always migrated, usage controlled by feature flags
+        public DbSet<EncounterDiagnosis> EncounterDiagnoses { get; set; }
+        public DbSet<TokenBlacklist> TokenBlacklists { get; set; }
+        public DbSet<Dhis2Mapping> Dhis2Mappings { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            // EncounterDiagnosis -> Encounter
+            builder.Entity<EncounterDiagnosis>()
+                .HasOne(d => d.Encounter)
+                .WithMany(e => e.Diagnoses)
+                .HasForeignKey(d => d.EncounterId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // TokenBlacklist index on Jti for fast revocation lookups
+            builder.Entity<TokenBlacklist>()
+                .HasIndex(t => t.Jti)
+                .IsUnique();
 
             // AuditLog -> ApplicationUser (optional FK)
             builder.Entity<AuditLog>()
